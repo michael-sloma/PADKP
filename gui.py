@@ -9,9 +9,17 @@ import uuid
 import parse
 
 # TODO
+
+# for beta:
+# manual testing
+# figure out how to make a windows exe
+# test exe on a system without python installed
+
+# for 0.1.0:
 # add error handling
 # add logging
-# figure out how to make a windows exe
+# expire old auctions
+# add "cancel auction" action
 
 class MainPage:
     def __init__(self, master):
