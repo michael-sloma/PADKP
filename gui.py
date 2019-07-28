@@ -1,14 +1,17 @@
 import tkinter
 from tkinter import ttk
 from tkinter import filedialog
-import datetime as dt
 import asyncio
 import threading
-import random
 import queue
 import uuid
 
 import parse
+
+# TODO
+# add error handling
+# add logging
+# figure out how to make a windows exe
 
 class MainPage:
     def __init__(self, master):
@@ -37,15 +40,10 @@ class MainPage:
         self.active_auctions = {}
         self.completed_auctions = []
 
-        #self.load_data_from_log()
-
     def open_log_file(self):
         filename = filedialog.askopenfilename()
-        print("FILE NAME", filename)
         f = open(filename)
-        assert f
         self.load_data_from_log_file(f)
-
 
     def load_data_from_log(self):
         """
@@ -62,7 +60,6 @@ class MainPage:
         # start the thread
         self.thread.start()
 
-
     def load_data_from_log_file(self, file_obj):
         # create Thread object
         # TODO do we need to kill the old thread if it exists?
@@ -73,8 +70,6 @@ class MainPage:
 
         # start the thread
         self.thread.start()
-
-
 
     def refresh_data(self):
         print('refresh data called')
@@ -136,7 +131,6 @@ class AsyncioThread(threading.Thread):
         self.queue = queue
         self.max_data = max_data
         self.file_obj = file_obj
-        self.FAKE_DATA_MODE = False
         threading.Thread.__init__(self)
 
     def run(self):
@@ -152,27 +146,6 @@ class AsyncioThread(threading.Thread):
                 action = parse.handle_line(line)
                 if action is not None:
                     self.queue.put(('', action))
-
-
-    async def create_dummy_data(self, key):
-        """ Create random fake actions for testing purposes """
-        sec = random.randint(0, 2)
-        start = {'timestamp': dt.datetime.now(),
-                 'item_name': 'Singing Steel Breastplate',
-                 'action': 'AUCTION_START'}
-        bid = {'timestamp': dt.datetime.now(),
-               'item_name': 'Singing Steel Breastplate',
-               'action': 'BID',
-               'player_name': random.choice(['AAA', 'BBB', 'CCC', 'DDD']),
-               'value': random.randint(5, 20)
-        }
-        close = {'timestamp': dt.datetime.now(),
-                 'item_name': 'Singing Steel Breastplate',
-                 'action': 'AUCTION_CLOSE'}
-        await asyncio.sleep(sec)
-        print('made some dummy data')
-        data = random.choice([start, start, bid, bid, bid, close])
-        self.queue.put((key, data))
 
 
 def main():
