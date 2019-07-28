@@ -5,6 +5,7 @@ import asyncio
 import threading
 import random
 import queue
+import uuid
 
 
 class MainPage:
@@ -28,21 +29,9 @@ class MainPage:
         self.tree.grid(row=20, columnspan=4, sticky='nsew')
         self.treeview = self.tree
 
-        test_data = [{'start_time': dt.datetime.now(),
-                      'winner': 'Playerone',
-                     'item': 'Singing Steel Breastplate',
-                      'price': 20,
-                      'status': 'Concluded'},
-                     {'start_time': dt.datetime.now(),
-                      'winner': None,
-                     'item': 'Cloak of Flames',
-                      'price': None,
-                      'status': 'Active'}
-        ]
-        for _ in range(5):
-            for p in test_data:
-                self.tree.insert('', 'end', text=p['start_time'].strftime('%a, %d %b %Y %l:%M %p'),
-                                 values=(p['item'], p['status'], p['winner'], p['price']))
+        self.active_auctions = {}
+        self.completed_auctions = []
+
         self.load_data_from_log()
 
     def load_data_from_log(self):
@@ -64,14 +53,57 @@ class MainPage:
     def refresh_data(self):
         print('refresh data called')
         while not self.queue.empty():
-            key, data = self.queue.get()
-            print('read a piece of data:', data)
-            self.tree.insert('', 'end', text=data['start_time'].strftime('%a, %d %b %Y %l:%M %p'),
-                             values=(data['item'], data['status'], data['winner'], data['price']))
-        self.master.after(1000, self.refresh_data)  # called only once!
+            key, action = self.queue.get()
+            print('read a piece of data:', action)
+            self.handle_action(action)
+        self.master.after(1000, self.refresh_data)
+
+    def handle_action(self, action):
+        if action['action'] == 'AUCTION_START':
+            # create a new auction
+            item = action['item_name']
+            status = 'Active'
+            winner = ''
+            price = ''
+            if item in self.active_auctions:
+                return
+
+            iid = uuid.uuid1()
+            self.tree.insert('', 'end', text=action['timestamp'].strftime('%a, %d %b %Y %l:%M %p'),
+                             values=(item, status, winner, price), iid=iid)
+            self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}}
+
+        elif action['action'] == 'BID':
+            item = action['item_name']
+            player = action['player_name']
+            value = action['value']
+            if item not in self.active_auctions:
+                return
+            self.active_auctions[item]['bids'][player] = value
+
+        elif action['action'] == 'AUCTION_CLOSE':
+            item = action['item_name']
+            if item not in self.active_auctions:
+                return
+            bids = self.active_auctions[item]['bids']
+            if bids:
+                winner, winning_bid = max(bids.items(), key=lambda x: x[1])
+            else:
+                winner = 'ROT'
+                winning_bid = ''
+            # update the UI
+            gui_iid = self.active_auctions[item]['iid']
+            new_values = (item, 'Concluded', winner, winning_bid)
+            self.tree.item(gui_iid, values=new_values)
+
+            self.completed_auctions.append(self.active_auctions[item])
+            del self.active_auctions[item]
 
 
 class AsyncioThread(threading.Thread):
+    """ Asynchronously read lines from the log file, interpret them, and stick
+    the resulting "action directives" in a queue that's shared between the gui
+    and the thread """
     def __init__(self, queue, max_data):
         self.asyncio_loop = asyncio.get_event_loop()
         self.queue = queue
@@ -92,15 +124,22 @@ class AsyncioThread(threading.Thread):
 
     async def create_dummy_data(self, key):
         """ Create data and store it in the queue. """
-        sec = random.randint(1, 10)
-        data = {'start_time': dt.datetime.now(),
-                 'winner': 'Playerone',
-                 'item': 'Singing Steel Breastplate',
-                 'price': random.randint(1, 50),
-                 'status': 'Concluded'}
+        sec = random.randint(0, 2)
+        start = {'timestamp': dt.datetime.now(),
+                 'item_name': 'Singing Steel Breastplate',
+                 'action': 'AUCTION_START'}
+        bid = {'timestamp': dt.datetime.now(),
+               'item_name': 'Singing Steel Breastplate',
+               'action': 'BID',
+               'player_name': random.choice(['AAA', 'BBB', 'CCC', 'DDD']),
+               'value': random.randint(5, 20)
+        }
+        close = {'timestamp': dt.datetime.now(),
+                 'item_name': 'Singing Steel Breastplate',
+                 'action': 'AUCTION_CLOSE'}
         await asyncio.sleep(sec)
         print('made some dummy data')
-
+        data = random.choice([start, start, bid, bid, bid, close])
         self.queue.put((key, data))
 
 
