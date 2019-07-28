@@ -11,7 +11,6 @@ import uuid
 class MainPage:
     def __init__(self, master):
         self.master = master
-        self.queue = queue.Queue()
         self.frame = tkinter.Frame(self.master)
 
         columns = ['item', 'status', 'winner', 'price']
@@ -26,9 +25,15 @@ class MainPage:
         self.tree.column('#2', stretch=tkinter.YES)
         self.tree.column('#3', stretch=tkinter.YES)
         self.tree.column('#4', stretch=tkinter.YES)
-        self.tree.grid(row=20, columnspan=4, sticky='nsew')
+        self.tree.grid(row=1, columnspan=4, sticky='nsew')
         self.treeview = self.tree
 
+        def callback():
+            print("click!")
+        self.button = tkinter.Button(master, text="Load log file", command=callback)
+        self.button.grid(row=2, column=0)
+
+        self.queue = queue.Queue()
         self.active_auctions = {}
         self.completed_auctions = []
 
@@ -40,7 +45,7 @@ class MainPage:
             thread.
         """
         # create Thread object
-        max_size = 10
+        max_size = 5
         self.thread = AsyncioThread(self.queue, max_size)
 
         #  timer to refresh the gui with data from the asyncio thread
@@ -59,6 +64,7 @@ class MainPage:
         self.master.after(1000, self.refresh_data)
 
     def handle_action(self, action):
+        """ update the gui with the results of an action from the queue """
         if action['action'] == 'AUCTION_START':
             # create a new auction
             item = action['item_name']
@@ -114,7 +120,7 @@ class AsyncioThread(threading.Thread):
         self.asyncio_loop.run_until_complete(self.do_data())
 
     async def do_data(self):
-        """ Creating and starting 'maxData' asyncio-tasks. """
+        """ Enqueue some dummy data """
         while True:
             tasks = [
                 self.create_dummy_data(key)
@@ -123,7 +129,7 @@ class AsyncioThread(threading.Thread):
             await asyncio.wait(tasks)
 
     async def create_dummy_data(self, key):
-        """ Create data and store it in the queue. """
+        """ Create random fake actions for testing purposes """
         sec = random.randint(0, 2)
         start = {'timestamp': dt.datetime.now(),
                  'item_name': 'Singing Steel Breastplate',
@@ -145,6 +151,7 @@ class AsyncioThread(threading.Thread):
 
 def main():
     root = tkinter.Tk()
+    root.title('Phoenix Ascended Auction Manager')
     d = MainPage(root)
     root.mainloop()
 
