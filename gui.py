@@ -1,5 +1,6 @@
 import tkinter
 from tkinter import ttk
+from tkinter import filedialog
 import datetime as dt
 import asyncio
 import threading
@@ -28,9 +29,7 @@ class MainPage:
         self.tree.grid(row=1, columnspan=4, sticky='nsew')
         self.treeview = self.tree
 
-        def callback():
-            print("click!")
-        self.button = tkinter.Button(master, text="Load log file", command=callback)
+        self.button = tkinter.Button(master, text="Load log file", command=self.open_log_file)
         self.button.grid(row=2, column=0)
 
         self.queue = queue.Queue()
@@ -38,6 +37,10 @@ class MainPage:
         self.completed_auctions = []
 
         self.load_data_from_log()
+
+    def open_log_file(self):
+        return filedialog.askopenfilename()
+
 
     def load_data_from_log(self):
         """
