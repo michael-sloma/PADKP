@@ -8,6 +8,7 @@ import random
 import queue
 import uuid
 
+import parse
 
 class MainPage:
     def __init__(self, master):
@@ -36,10 +37,14 @@ class MainPage:
         self.active_auctions = {}
         self.completed_auctions = []
 
-        self.load_data_from_log()
+        #self.load_data_from_log()
 
     def open_log_file(self):
-        return filedialog.askopenfilename()
+        filename = filedialog.askopenfilename()
+        print("FILE NAME", filename)
+        f = open(filename)
+        assert f
+        self.load_data_from_log_file(f)
 
 
     def load_data_from_log(self):
@@ -56,6 +61,19 @@ class MainPage:
 
         # start the thread
         self.thread.start()
+
+
+    def load_data_from_log_file(self, file_obj):
+        # create Thread object
+        # TODO do we need to kill the old thread if it exists?
+        self.thread = AsyncioThread(self.queue,file_obj=file_obj)
+
+        #  timer to refresh the gui with data from the asyncio thread
+        self.master.after(1000, self.refresh_data)  # called only once!
+
+        # start the thread
+        self.thread.start()
+
 
 
     def refresh_data(self):
@@ -113,10 +131,12 @@ class AsyncioThread(threading.Thread):
     """ Asynchronously read lines from the log file, interpret them, and stick
     the resulting "action directives" in a queue that's shared between the gui
     and the thread """
-    def __init__(self, queue, max_data):
+    def __init__(self, queue, file_obj=None, max_data=5):
         self.asyncio_loop = asyncio.get_event_loop()
         self.queue = queue
         self.max_data = max_data
+        self.file_obj = file_obj
+        self.FAKE_DATA_MODE = False
         threading.Thread.__init__(self)
 
     def run(self):
@@ -125,11 +145,14 @@ class AsyncioThread(threading.Thread):
     async def do_data(self):
         """ Enqueue some dummy data """
         while True:
-            tasks = [
-                self.create_dummy_data(key)
-                for key in range(self.max_data)
-            ]
-            await asyncio.wait(tasks)
+            line = self.file_obj.readline()
+            if line is None:
+                await asyncio.sleep(1)
+            else:
+                action = parse.handle_line(line)
+                if action is not None:
+                    self.queue.put(('', action))
+
 
     async def create_dummy_data(self, key):
         """ Create random fake actions for testing purposes """
