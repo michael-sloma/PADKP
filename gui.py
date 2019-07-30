@@ -10,16 +10,12 @@ import parse
 
 # TODO
 
-# for beta:
-# manual testing
-# figure out how to make a windows exe
-# test exe on a system without python installed
-
 # for 0.1.0:
 # add error handling
 # add logging
 # expire old auctions
 # add "cancel auction" action
+
 
 class MainPage:
     def __init__(self, master):
@@ -80,7 +76,6 @@ class MainPage:
         self.thread.start()
 
     def refresh_data(self):
-        print('refresh data called')
         while not self.queue.empty():
             key, action = self.queue.get()
             print('read a piece of data:', action)
@@ -153,6 +148,7 @@ class AsyncioThread(threading.Thread):
             else:
                 action = parse.handle_line(line)
                 if action is not None:
+                    print('enqueued a line', line)
                     self.queue.put(('', action))
 
 
