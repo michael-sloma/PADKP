@@ -1,38 +1,6 @@
 import re
 import datetime as dt
 
-#symbols:
-# auction start
-# auction bid
-# auction close
-# raid start?
-# raid end?
-
-# states
-# active auctions
-
-# while read line:
-# if auction start: add auction to active auctions
-# if bid: record bid for auction
-# if auction close: check bids for auctions, award item, remove auction from active auctions
-
-
-class Auction:
-    def __init__(self, item_name):
-        self.item_name = item_name
-        self.bids = {}
-
-    def bid(self, player_name, bid):
-        self.bids[player_name] = bid
-
-    def award(self):
-        if not self.bids:
-            return 'ROT'
-        else:
-            winner, value = max(self.bids.items(), key=lambda vals: vals[1])
-            return winner, value
-
-
 def auction_start_match(line):
     return re.match("You tell your raid, '!bids open (.*)'$", line.contents, re.IGNORECASE)
 
@@ -124,9 +92,3 @@ def handle_line(raw_line):
     else:
         return None
 
-
-"""
-todo
-[x] create a new auction with the item name
-[x] record a bid for an item
-"""

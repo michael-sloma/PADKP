@@ -35,12 +35,13 @@ class MainPage:
         self.tree.column('#3', stretch=tkinter.YES)
         self.tree.column('#4', stretch=tkinter.YES)
         self.tree.grid(row=1, columnspan=4, sticky='nsew')
-        self.treeview = self.tree
 
         self.button = tkinter.Button(master, text="Load log file", command=self.open_log_file)
         self.button.grid(row=2, column=0)
 
-        self.queue = queue.Queue()
+        self.thread = None  # thread to asynchronously read data from the log file
+
+        self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.active_auctions = {}
         self.completed_auctions = []
 
@@ -49,25 +50,10 @@ class MainPage:
         f = open(filename)
         self.load_data_from_log_file(f)
 
-    def load_data_from_log(self):
-        """
-            Button-Event-Handler starting the asyncio part in a separate
-            thread.
-        """
-        # create Thread object
-        max_size = 5
-        self.thread = AsyncioThread(self.queue, max_size)
-
-        #  timer to refresh the gui with data from the asyncio thread
-        self.master.after(1000, self.refresh_data)  # called only once!
-
-        # start the thread
-        self.thread.start()
-
     def load_data_from_log_file(self, file_obj):
         # create Thread object
         # TODO do we need to kill the old thread if it exists?
-        self.thread = AsyncioThread(self.queue,file_obj=file_obj)
+        self.thread = AsyncioThread(self.queue, file_obj=file_obj)
 
         #  timer to refresh the gui with data from the asyncio thread
         self.master.after(1000, self.refresh_data)  # called only once!
@@ -140,7 +126,7 @@ class AsyncioThread(threading.Thread):
         self.asyncio_loop.run_until_complete(self.do_data())
 
     async def do_data(self):
-        """ Enqueue some dummy data """
+        """ Read new lines from the log file and enqueue any new actions"""
         while True:
             line = self.file_obj.readline()
             if line is None:
