@@ -80,7 +80,7 @@ class MainPage:
                 return
 
             iid = uuid.uuid1()
-            self.tree.insert('', 'end', text=action['timestamp'].strftime('%a, %d %b %Y %H:%M'),
+            self.tree.insert('', 0, text=action['timestamp'].strftime('%a, %d %b %Y %H:%M'),
                              values=(item, status, winner, price), iid=iid)
             self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}}
 
