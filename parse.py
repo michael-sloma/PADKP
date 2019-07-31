@@ -68,8 +68,7 @@ class LogLine:
         self.contents = text[27:]
 
     def timestamp(self):
-        return self.time_str
-        #return dt.datetime.strptime(self.time_str, '[%a %b %d %H:%M:%S %Y]')
+        return dt.datetime.strptime(self.time_str, '[%a %b %d %H:%M:%S %Y]')
 
 
 def pre_filter(raw_line):
