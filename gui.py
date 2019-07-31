@@ -110,6 +110,17 @@ class MainPage:
             self.completed_auctions.append(self.active_auctions[item])
             del self.active_auctions[item]
 
+        elif action['action'] == 'AUCTION_CANCEL':
+            item = action['item_name']
+            if item not in self.active_auctions:
+                return
+
+            # update the UI
+            gui_iid = self.active_auctions[item]['iid']
+            new_values = (item, 'Cancelled', '', '')
+            self.tree.item(gui_iid, values=new_values)
+
+            del self.active_auctions[item]
 
 class AsyncioThread(threading.Thread):
     """ Asynchronously read lines from the log file, interpret them, and stick

@@ -48,11 +48,15 @@ def auction_bid(line):
 
 
 def auction_close_match(line):
-    return re.match("!bids closed (.+)'$", line.contents, re.IGNORECASE)
+    return re.match("You tell your raid, '!bids closed (.*)'$",
+                    line.contents,
+                    re.IGNORECASE)
 
 
 def auction_close(line):
-    search = re.search("!bids closed (.+)'$", line.contents, re.IGNORECASE)
+    search = re.search("You tell your raid, '!bids closed (.*)'$",
+                       line.contents,
+                       re.IGNORECASE)
     if search:
         # TODO error handling if there is no such active auction
         item_name = search.group(1)
@@ -60,6 +64,25 @@ def auction_close(line):
                 'item_name': item_name,
                 'timestamp': line.timestamp()}
     return None
+
+
+def auction_cancel_match(line):
+    return re.match("You tell your raid, '!cancel (.*)'$",
+                    line.contents,
+                    re.IGNORECASE)
+
+
+def auction_cancel(line):
+    search = re.search("You tell your raid, '!cancel (.*)'$",
+                       line.contents,
+                       re.IGNORECASE)
+    if search:
+        item_name = search.group(1)
+        return {'action': 'AUCTION_CANCEL',
+                'item_name': item_name,
+                'timestamp': line.timestamp()}
+    return None
+
 
 
 class LogLine:
@@ -86,8 +109,10 @@ def handle_line(raw_line):
         return auction_start(line)
     elif auction_bid_match(line):
         return auction_bid(line)
-    elif auction_close(line):
+    elif auction_close_match(line):
         return auction_close(line)
+    elif auction_cancel_match(line):
+        return auction_cancel(line)
     else:
         return None
 
