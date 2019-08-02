@@ -15,6 +15,9 @@ import parse
 # add logging
 # expire old auctions
 # add "cancel auction" action
+# handle multiples of the same item
+# handle TIES
+# handle trailing whitespace on all actions
 
 
 class MainPage:

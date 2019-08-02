@@ -28,21 +28,21 @@ BIDS_CLOSED = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Sing
 def test_auction_open():
     input_line = parse.LogLine(AUCTION_OPEN)
     result = parse.auction_start(input_line)
-    assert result['item_name'] == 'Singing Steel Breastplate' in result
+    assert result['item_name'] == 'Singing Steel Breastplate'
 
 
 def test_auction_bid_tell_window():
-    active_auctions = {'Singing Steel Breastplate': parse.Auction('Singing Steel Breastplate')}
     input_line = parse.LogLine(BID_TELL_WINDOW)
-    result = parse.auction_bid(input_line, active_auctions)
+    result = parse.auction_bid(input_line)
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
+    assert result['action'] == 'BID'
 
 
 def test_auction_award():
     input_line = parse.LogLine(BIDS_CLOSED)
     result = parse.auction_close(input_line)
     assert result['item_name'] == 'Singing Steel Breastplate'
-    assert result['action_'] == 'AUCTION_CLOSE'
+    assert result['action'] == 'AUCTION_CLOSE'
 
