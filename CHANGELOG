@@ -1,0 +1,10 @@
+0.0.2
+*   Refactoring to separate the bidding rule logic from the GUI
+*   Matching is now more robust, we can handle extra whitespace throughout
+*   All users can append comments to commands with a double pipe: ||
+*   Officers can cancel their own auctions with the command !CANCEL itemlink
+*   Open auctions expire after 30 minutes
+
+
+0.0.1
+*   Initial playtest!
