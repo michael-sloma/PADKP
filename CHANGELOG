@@ -4,6 +4,7 @@
 *   All users can append comments to commands with a double pipe: ||
 *   Officers can cancel their own auctions with the command !CANCEL itemlink
 *   Open auctions expire after 30 minutes
+*   Ties should be correctly reported. A tie remains open until closed or cancelled
 
 
 0.0.1

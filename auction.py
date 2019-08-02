@@ -39,17 +39,28 @@ class AuctionState:
             if item not in self.active_auctions:
                 return result
             bids = self.active_auctions[item]['bids']
-            if bids:
-                winner, winning_bid = max(bids.items(), key=lambda x: x[1])
-            else:
-                winner = 'ROT'
-                winning_bid = ''
-
             iid = self.active_auctions[item]['iid']
-            self.archive_current_auction(item)
 
-            result.update_rows.append(Row(iid=iid, item=item, status='Concluded', winner=winner,
-                                        price=winning_bid))
+            if not bids:
+                winners = ['ROT']
+                winning_bid = ''
+            else:
+                winning_bid = max(bids.values())
+                winners = [winner for winner, bid in bids.items() if bid == winning_bid]
+
+            if len(winners) == 1:
+                self.archive_current_auction(item)
+                result.update_rows.append(Row(iid=iid,
+                                              item=item,
+                                              status='Concluded',
+                                              winner=winners[0],
+                                              price=winning_bid))
+            else:
+                result.update_rows.append(Row(iid=iid,
+                                              item=item,
+                                              status='Tied',
+                                              winner=', '.join(winners),
+                                              price=winning_bid))
 
         elif action['action'] == 'AUCTION_CANCEL':
             item = action['item_name']
