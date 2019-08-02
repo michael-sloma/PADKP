@@ -10,48 +10,33 @@ class AuctionState:
         if action['action'] == 'AUCTION_START':
             # create a new auction
             item = action['item_name']
-            status = 'Active'
-            winner = ''
-            price = ''
             timestamp = action['timestamp']
             if item in self.active_auctions:
-                return
-
+                return None
             iid = uuid.uuid1()
             self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}}
             return ActionResult(add_rows=[Row(iid=iid, timestamp=timestamp, item=item, status='Open')])
 
-            #self.tree.insert('', 0, text=action['timestamp'].strftime('%a, %d %b %Y %H:%M'),
-                             #values=(item, status, winner, price), iid=iid)
-            # self.state.open_auction(action)
-            # self.redraw
-
         elif action['action'] == 'BID':
-            # self.state.bid(action)
-            # no need to redraw
             item = action['item_name']
             player = action['player_name']
             value = action['value']
             if item not in self.active_auctions:
-                return
+                return None
             self.active_auctions[item]['bids'][player] = value
 
         elif action['action'] == 'AUCTION_CLOSE':
-            # self.state.close(action)
-            # redraw()
             item = action['item_name']
             if item not in self.active_auctions:
-                return
+                return None
             bids = self.active_auctions[item]['bids']
             if bids:
                 winner, winning_bid = max(bids.items(), key=lambda x: x[1])
             else:
                 winner = 'ROT'
                 winning_bid = ''
-            # update the UI
+
             iid = self.active_auctions[item]['iid']
-            new_values = (item, 'Concluded', winner, winning_bid)
-            #self.tree.item(gui_iid, values=new_values)
             self.concluded_auctions.append(self.active_auctions[item])
             del self.active_auctions[item]
 
@@ -63,11 +48,7 @@ class AuctionState:
             if item not in self.active_auctions:
                 return
 
-            # update the UI
             iid = self.active_auctions[item]['iid']
-            new_values = (item, 'Cancelled', '', '')
-            #self.tree.item(gui_iid, values=new_values)
-
             del self.active_auctions[item]
             return {'new_rows': [],
                     'update_rows': [{'iid': iid, 'item': item, 'status': 'Cancelled', 'winner': '', 'price': ''}]}
