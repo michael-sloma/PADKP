@@ -13,7 +13,6 @@ import auction
 
 # for 0.1.0:
 # add error handling
-# expire old auctions
 # handle multiples of the same item
 # handle TIES
 
