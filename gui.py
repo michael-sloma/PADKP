@@ -7,6 +7,7 @@ import queue
 import uuid
 
 import parse
+import auction
 
 # TODO
 
@@ -45,6 +46,7 @@ class MainPage:
         self.thread = None  # thread to asynchronously read data from the log file
 
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
+        self.state = auction.AuctionState()
         self.active_auctions = {}
         self.completed_auctions = []
 
@@ -71,59 +73,21 @@ class MainPage:
             self.handle_action(action)
         self.master.after(1000, self.refresh_data)
 
+    def show_result(self, action_result):
+        if action_result is None:
+            return
+        for new_row in action_result.add_rows:
+            self.tree.insert('', 0, text=new_row.timestamp.strftime('%a, %d %b %Y %H:%M'),
+                             values=(new_row.item, new_row.status, new_row.winner, new_row.price), iid=new_row.iid)
+        for update_row in action_result.update_rows:
+            self.tree.item(update_row.iid, values=(update_row.item, update_row.status, update_row.winner,
+                                                   update_row.price))
+
     def handle_action(self, action):
         """ update the gui with the results of an action from the queue """
-        if action['action'] == 'AUCTION_START':
-            # create a new auction
-            item = action['item_name']
-            status = 'Active'
-            winner = ''
-            price = ''
-            if item in self.active_auctions:
-                return
+        action_result = self.state.update(action)
+        self.show_result(action_result)
 
-            iid = uuid.uuid1()
-            self.tree.insert('', 0, text=action['timestamp'].strftime('%a, %d %b %Y %H:%M'),
-                             values=(item, status, winner, price), iid=iid)
-            self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}}
-
-        elif action['action'] == 'BID':
-            item = action['item_name']
-            player = action['player_name']
-            value = action['value']
-            if item not in self.active_auctions:
-                return
-            self.active_auctions[item]['bids'][player] = value
-
-        elif action['action'] == 'AUCTION_CLOSE':
-            item = action['item_name']
-            if item not in self.active_auctions:
-                return
-            bids = self.active_auctions[item]['bids']
-            if bids:
-                winner, winning_bid = max(bids.items(), key=lambda x: x[1])
-            else:
-                winner = 'ROT'
-                winning_bid = ''
-            # update the UI
-            gui_iid = self.active_auctions[item]['iid']
-            new_values = (item, 'Concluded', winner, winning_bid)
-            self.tree.item(gui_iid, values=new_values)
-
-            self.completed_auctions.append(self.active_auctions[item])
-            del self.active_auctions[item]
-
-        elif action['action'] == 'AUCTION_CANCEL':
-            item = action['item_name']
-            if item not in self.active_auctions:
-                return
-
-            # update the UI
-            gui_iid = self.active_auctions[item]['iid']
-            new_values = (item, 'Cancelled', '', '')
-            self.tree.item(gui_iid, values=new_values)
-
-            del self.active_auctions[item]
 
 class AsyncioThread(threading.Thread):
     """ Asynchronously read lines from the log file, interpret them, and stick
