@@ -13,12 +13,12 @@ import auction
 
 # for 0.1.0:
 # add error handling
-# add logging
 # expire old auctions
-# add "cancel auction" action
 # handle multiples of the same item
 # handle TIES
 # handle trailing whitespace on all actions
+# handle comments on command lines
+# add "cancel auction" action
 
 
 class MainPage:
@@ -61,17 +61,18 @@ class MainPage:
         self.thread = AsyncioThread(self.queue, file_obj=file_obj)
 
         #  timer to refresh the gui with data from the asyncio thread
-        self.master.after(1000, self.refresh_data)  # called only once!
+        self.master.after(1000, self.update_gui)  # called only once!
 
         # start the thread
         self.thread.start()
 
-    def refresh_data(self):
+    def update_gui(self):
         while not self.queue.empty():
             key, action = self.queue.get()
             print('read a piece of data:', action)
-            self.handle_action(action)
-        self.master.after(1000, self.refresh_data)
+            action_result = self.state.update(action)
+            self.show_result(action_result)
+        self.master.after(1000, self.update_gui)
 
     def show_result(self, action_result):
         if action_result is None:
@@ -82,11 +83,6 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.status, update_row.winner,
                                                    update_row.price))
-
-    def handle_action(self, action):
-        """ update the gui with the results of an action from the queue """
-        action_result = self.state.update(action)
-        self.show_result(action_result)
 
 
 class AsyncioThread(threading.Thread):
