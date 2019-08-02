@@ -1,8 +1,15 @@
 import re
 import datetime as dt
 
+
+COMMAND_RE = "You tell your raid, '\s*!{}\s*(.*?)\s*(\|\|.*)?'$"
+AUCTION_START_RE = COMMAND_RE.format('bids open')
+AUCTION_CLOSE_RE = COMMAND_RE.format('bids closed')
+AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
+
+
 def auction_start_match(line):
-    return re.match("You tell your raid, '!bids open (.*)'$", line.contents, re.IGNORECASE)
+    return re.match(AUCTION_START_RE, line.contents, re.IGNORECASE)
 
 
 def auction_start(line):
@@ -11,36 +18,38 @@ def auction_start(line):
     !Bids open ITEMLINK
     Case doesn't matter
     """
-    search = re.search("You tell your raid, '!bids open (.*)'$",
+    search = re.search(AUCTION_START_RE,
                        line.contents,
                        re.IGNORECASE)
     if search:
         item_name = search.group(1)
         return {'action': 'AUCTION_START',
-                'item_name': item_name,
+                'item_name': item_name.strip(),
                 'timestamp': line.timestamp()}
     return None
 
 
+BID_TELL_WINDOW_RE = '([A-Z][a-z]+) -> [A-Z][a-z]+:\s+(.+)\s+([0-9]+)\s*(\|\|.*)?$'
+BID_TELL_RE = "([A-Z][a-z]+) tells you, '\s*(.+) ([0-9]+)"
 def auction_bid_match(line):
-    return re.match('([A-Z][a-z]+) -> [A-Z][a-z]+: (.+) ([0-9]+)$', line.contents)
+    return re.match(BID_TELL_WINDOW_RE, line.contents) \
+           or re.match(BID_TELL_RE, line.contents)
 
 
 def auction_bid(line):
-    search_tell_window = re.search('([A-Z][a-z]+) -> [A-Z][a-z]+: (.+) ([0-9]+)$',
-                                    line.contents)
-    search_tell = re.search("([A-Z][a-z]+) tells you, '(.+) ([0-9]+)", line.contents)
+    search_tell_window = re.search(BID_TELL_WINDOW_RE, line.contents)
+    search_tell = re.search(BID_TELL_RE, line.contents)
     if search_tell_window:
-        player_name, item_name, value = search_tell_window.groups()
+        player_name, item_name, value = search_tell_window.groups()[:3]
         return {'action': 'BID',
-                'item_name': item_name,
+                'item_name': item_name.strip(),
                 'player_name': player_name,
                 'value': int(value),
                 'timestamp': line.timestamp()}
     elif search_tell:
         player_name, item_name, value = search_tell.groups()
         return {'action': 'BID',
-                'item_name': item_name,
+                'item_name': item_name.strip(),
                 'player_name': player_name,
                 'value': int(value),
                 'timestamp': line.timestamp()}
@@ -48,32 +57,30 @@ def auction_bid(line):
 
 
 def auction_close_match(line):
-    return re.match("You tell your raid, '!bids closed (.*)'$",
-                    line.contents,
-                    re.IGNORECASE)
+    return re.match(AUCTION_CLOSE_RE, line.contents, re.IGNORECASE)
 
 
 def auction_close(line):
-    search = re.search("You tell your raid, '!bids closed (.*)'$",
-                       line.contents,
-                       re.IGNORECASE)
+    search = re.search(AUCTION_CLOSE_RE, line.contents, re.IGNORECASE)
     if search:
         # TODO error handling if there is no such active auction
         item_name = search.group(1)
+        print('group 1', search.group(1))
+        print('group 2', search.group(2))
         return {'action': 'AUCTION_CLOSE',
-                'item_name': item_name,
+                'item_name': item_name.strip(),
                 'timestamp': line.timestamp()}
     return None
 
 
 def auction_cancel_match(line):
-    return re.match("You tell your raid, '!cancel (.*)'$",
+    return re.match(AUCTION_CANCEL_RE,
                     line.contents,
                     re.IGNORECASE)
 
 
 def auction_cancel(line):
-    search = re.search("You tell your raid, '!cancel (.*)'$",
+    search = re.search(AUCTION_CANCEL_RE,
                        line.contents,
                        re.IGNORECASE)
     if search:
@@ -88,7 +95,7 @@ def auction_cancel(line):
 class LogLine:
     def __init__(self, text):
         self.time_str = text[:26]
-        self.contents = text[27:]
+        self.contents = text[27:].strip()
 
     def timestamp(self):
         return dt.datetime.strptime(self.time_str, '[%a %b %d %H:%M:%S %Y]')

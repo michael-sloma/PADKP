@@ -16,9 +16,6 @@ import auction
 # expire old auctions
 # handle multiples of the same item
 # handle TIES
-# handle trailing whitespace on all actions
-# handle comments on command lines
-# add "cancel auction" action
 
 
 class MainPage:
