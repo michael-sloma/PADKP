@@ -7,6 +7,7 @@ This bot runs alongside your EverQuest client, reads your log file, and helps yo
 #### Raiders
 * Wait until you see a tell that looks like this: `Soandso tells the raid, '!Bids Open Cloak of Flames || TELLS TO ME'`
 * Send a tell to that player. Send the item link, then your bid. Follow this format: `/t Soandso Cloak of Flames 50`
+* If you send repeated bids for the same item, the LAST one is the one that counts.
 * Make sure you use the *item link* in your tell. You don't technically have to, but doing so will ensure your spelling and spacing was right.
 * Good luck!
 
@@ -17,10 +18,10 @@ This bot runs alongside your EverQuest client, reads your log file, and helps yo
 * If there's more than one, include the number of items like this: `/rsay !Bids Open itemlink !NUMBER || ANY COMMENTS GO HERE`
 * If everything went well, the auction will appear in your window.
 * Once bids are in, close the auction like this: `/rsay !Bids Closed itemlink || ANY COMMENTS GO HERE`
-* The window will tell you who won.
+* The window should tell you who won. If there was a tie, the auction will report a tie and remain open so you can collect tiebreaker bids.
 * If you want to see the bids, select an auction from the window and click "Auction details". A window will open showing who bid and how much.
 * See below for documentation and more examples of valid commands.
-* If you have a problem, send a big report to Quaff along with a description of what you expected to happen, what actually happened, and a copy of your log.
+* If you have a problem, send a bug report to Quaff with a description of what you expected to happen, what actually happened, and a copy of your log. The more information the better.
 
 ## Commands
 All commands recognized by the parser are prefixed with an exclamation point (`!`). If you want to include additional, human readable information along with your command, you can use a comment, which is prefixed by two "vertical bar" or "pipe" symbols, like this: `/rs !MY COMMAND || my comment`
