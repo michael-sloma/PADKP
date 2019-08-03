@@ -1,9 +1,11 @@
 import tkinter
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 import asyncio
 import threading
 import queue
+import sys
 
 import parse
 import auction
@@ -37,27 +39,25 @@ class MainPage:
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
+        self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
+        self.button.grid(row=2, column=2)
+
         self.thread = None  # thread to asynchronously read data from the log file
 
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
+    def confirm_quit(self):
+        confirm = messagebox.askyesno('', 'Really quit?')
+        if confirm:
+            self.master.destroy()
+            sys.exit()
+
     def open_details_window(self):
         iid = self.tree.focus()
-        selected_row = self.tree.item(iid)
-        item = selected_row['values'][0]
         auction = self.state.get_auction_by_iid(iid)
+        DetailsWindow(self.master, auction)
 
-        window = tkinter.Toplevel(self.master)
-        window.title('Auction details: {}'.format(item))
-        columns = ['name', 'bid']
-        tree = ttk.Treeview(window, columns=columns)
-        tree.heading('#0', text='name')
-        tree.heading('#1', text='bid')
-        for name, bid in sorted(auction['bids'].items(), key=lambda x: x[1]):
-            tree.insert('', 0, text=name, values=(bid,))
-        tree.grid()
-        tkinter.Button(window, text="Close", command=window.destroy).grid()
 
     def open_log_file(self):
         filename = filedialog.askopenfilename()
@@ -94,6 +94,26 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
+
+
+class DetailsWindow:
+    def __init__(self, master, auction):
+        self.auction = auction  # save a reference to the auction dict
+        self.window = tkinter.Toplevel(master)
+        self.window.title('Auction details: {}'.format(auction['item']))
+        columns = ['name', 'bid']
+        self.tree = ttk.Treeview(self.window, columns=columns)
+        self.tree.heading('#0', text='name')
+        self.tree.heading('#1', text='bid')
+        self.tree.grid()
+        self.close_button = tkinter.Button(self.window, text="Close", command=self.window.destroy).grid()
+        self.redraw()
+
+    def redraw(self):
+        self.tree.delete(*self.tree.get_children())
+        for name, bid in sorted(self.auction['bids'].items(), key=lambda x: x[1]):
+            self.tree.insert('', 0, text=name, values=(bid,))
+        self.window.after(1000, self.redraw)
 
 
 class AsyncioThread(threading.Thread):
