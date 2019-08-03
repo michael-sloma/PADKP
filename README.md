@@ -1,7 +1,6 @@
 # PADKP
 This bot runs alongside your EverQuest client, reads your log file, and helps you manage auctions.
 
-The bot is controlled from inside the game using a few commands. All commands must be in RAID SAY. Capitalization and spacing typically doesn't matter.
 
 ## Quick start
 
@@ -14,7 +13,7 @@ The bot is controlled from inside the game using a few commands. All commands mu
 #### Loot Team
 * Open the PADKP executable
 * Click "open log file" and give it the path to your log.
-* Open an auction like this: `/rsay !Bids Open itemlink || ANY COMMENTS GO HERE`
+* Open an auction like this: `/rsay !Bids Open itemlink || ANY COMMENTS GO HERE`. Capitalization and spacing in the command don't matter, but make sure to use the item link.
 * If there's more than one, include the number of items like this: `/rsay !Bids Open itemlink !NUMBER || ANY COMMENTS GO HERE`
 * If everything went well, the auction will appear in your window.
 * Once bids are in, close the auction like this: `/rsay !Bids Closed itemlink || ANY COMMENTS GO HERE`
