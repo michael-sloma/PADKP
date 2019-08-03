@@ -26,7 +26,8 @@ AUCTION_OPEN_WITH_COMMENT_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!
 AUCTION_OPEN_WITH_WHITESPACE_1 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open   Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_3 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate  || TELLS TO ME'"
-AUCTION_OPEN_DOUBLE= "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate !2 || THERE ARE TWO'"
+AUCTION_OPEN_DOUBLE = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate !2 || THERE ARE TWO'"
+AUCTION_OPEN_DOUBLE_2= "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open !2 Singing Steel Breastplate  || THERE ARE TWO'"
 
 BID_TELL_WINDOW = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55"
 BID_TELL_WINDOW_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 "
@@ -96,5 +97,9 @@ def test_auction_start_count():
     assert result['item_count'] == 1
 
     input_line = parse.LogLine(AUCTION_OPEN_DOUBLE)
+    result = parse.auction_start(input_line)
+    assert result['item_count'] == 2
+
+    input_line = parse.LogLine(AUCTION_OPEN_DOUBLE_2)
     result = parse.auction_start(input_line)
     assert result['item_count'] == 2
