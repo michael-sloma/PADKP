@@ -65,13 +65,19 @@ class MainPage:
 
 
     def open_log_file(self):
+        self.clear_data()
         filename = filedialog.askopenfilename()
         f = open(filename)
         self.load_data_from_log_file(f)
 
-    def load_data_from_log_file(self, file_obj):
+    def clear_data(self):
         if self.thread is not None:
             self.thread.stop()
+        self.tree.delete(*self.tree.get_children())
+        self.queue = queue.Queue()
+        self.state = auction.AuctionState()
+
+    def load_data_from_log_file(self, file_obj):
         # create Thread object
         # TODO do we need to kill the old thread if it exists?
         self.thread = AsyncioThread(self.queue, file_obj=file_obj)
