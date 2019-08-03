@@ -4,17 +4,9 @@ from tkinter import filedialog
 import asyncio
 import threading
 import queue
-import uuid
 
 import parse
 import auction
-
-# TODO
-
-# for 0.1.0:
-# add error handling
-# handle multiples of the same item
-# handle TIES
 
 
 class MainPage:
