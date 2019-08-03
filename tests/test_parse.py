@@ -26,6 +26,7 @@ AUCTION_OPEN_WITH_COMMENT_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!
 AUCTION_OPEN_WITH_WHITESPACE_1 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open   Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_3 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate  || TELLS TO ME'"
+AUCTION_OPEN_DOUBLE= "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate !2 || THERE ARE TWO'"
 
 BID_TELL_WINDOW = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55"
 BID_TELL_WINDOW_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 "
@@ -88,3 +89,12 @@ def test_auction_award(comment, bids_closed_message):
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['action'] == 'AUCTION_CLOSE'
 
+
+def test_auction_start_count():
+    input_line = parse.LogLine(AUCTION_OPEN)
+    result = parse.auction_start(input_line)
+    assert result['item_count'] == 1
+
+    input_line = parse.LogLine(AUCTION_OPEN_DOUBLE)
+    result = parse.auction_start(input_line)
+    assert result['item_count'] == 2

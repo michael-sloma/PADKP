@@ -1,10 +1,25 @@
 0.0.2
-*   Refactoring to separate the bidding rule logic from the GUI
-*   Matching is now more robust, we can handle extra whitespace throughout
-*   All users can append comments to commands with a double pipe: ||
-*   Officers can cancel their own auctions with the command !CANCEL itemlink
+*   Internal refactoring to separate the bidding rule logic from the GUI. This
+    makes it feasible to write more complex rules.
+
+*   The parser is now more robust. In particular, we can gracefully handle extra
+    whitespace anywhere in a command.
+
+*   Users can append comments to commands with a double pipe: ||. A command with
+    a comment looks like this:
+    /rs !BIDS OPEN Cloak of Flames || remember /tell quaff itemlink bid ONLY
+    Comments are solely for humans to read, the parser ignores them completely
+
+*   You can cancel your own auctions with the command !CANCEL itemlink
+
 *   Open auctions expire after 30 minutes
-*   Ties should be correctly reported. A tie remains open until closed or cancelled
+
+*   Ties should be correctly reported. A tied auction remains open until closed
+    or cancelled
+
+*   We can now handle auctions of multiple identical items. A multi-item auction
+    is started like this:
+    /rs !BIDS OPEN !2 Cloak of Flames || WOW THREE!! Top three bids win.
 
 
 0.0.1

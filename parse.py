@@ -2,7 +2,7 @@ import re
 import datetime as dt
 
 
-COMMAND_RE = "You tell your raid, '\s*!{}\s*(.*?)\s*(\|\|.*)?'$"
+COMMAND_RE = "You tell your raid, '\s*!{}\s*(?P<item>.*?)\s*(?P<number>![0-9])?\s*(?P<comment>\|\|.*)?'$"
 AUCTION_START_RE = COMMAND_RE.format('bids open')
 AUCTION_CLOSE_RE = COMMAND_RE.format('bids closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
@@ -22,9 +22,11 @@ def auction_start(line):
                        line.contents,
                        re.IGNORECASE)
     if search:
-        item_name = search.group(1)
+        item_name = search.group('item')
+        item_count = search.group('number') or '!1'
         return {'action': 'AUCTION_START',
                 'item_name': item_name.strip(),
+                'item_count': int(item_count.replace('!', '')),
                 'timestamp': line.timestamp()}
     return None
 
@@ -64,9 +66,7 @@ def auction_close(line):
     search = re.search(AUCTION_CLOSE_RE, line.contents, re.IGNORECASE)
     if search:
         # TODO error handling if there is no such active auction
-        item_name = search.group(1)
-        print('group 1', search.group(1))
-        print('group 2', search.group(2))
+        item_name = search.group('item')
         return {'action': 'AUCTION_CLOSE',
                 'item_name': item_name.strip(),
                 'timestamp': line.timestamp()}
@@ -84,7 +84,7 @@ def auction_cancel(line):
                        line.contents,
                        re.IGNORECASE)
     if search:
-        item_name = search.group(1)
+        item_name = search.group('item')
         return {'action': 'AUCTION_CANCEL',
                 'item_name': item_name,
                 'timestamp': line.timestamp()}

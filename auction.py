@@ -12,6 +12,7 @@ class AuctionState:
         result = ActionResult()
         for item, auction in list(self.active_auctions.items()):
             if action['timestamp'] - auction['time'] > dt.timedelta(minutes=30):
+                print("expiring an auction for", item)
                 self.archive_current_auction(item)
                 iid = auction['iid']
                 result.update_rows.append(Row(iid=iid, item=item, status='Expired'))
@@ -20,10 +21,12 @@ class AuctionState:
             # create a new auction
             item = action['item_name']
             timestamp = action['timestamp']
+            item_count = action['item_count']
             if item in self.active_auctions:
                 return result
             iid = uuid.uuid1()
-            self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}, 'time': timestamp}
+            self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}, 'time': timestamp,
+                                          'item_count':item_count}
             result.add_rows.append(Row(iid=iid, timestamp=timestamp, item=item, status='Open'))
 
         elif action['action'] == 'BID':
@@ -35,32 +38,9 @@ class AuctionState:
             self.active_auctions[item]['bids'][player] = value
 
         elif action['action'] == 'AUCTION_CLOSE':
-            item = action['item_name']
-            if item not in self.active_auctions:
-                return result
-            bids = self.active_auctions[item]['bids']
-            iid = self.active_auctions[item]['iid']
-
-            if not bids:
-                winners = ['ROT']
-                winning_bid = ''
-            else:
-                winning_bid = max(bids.values())
-                winners = [winner for winner, bid in bids.items() if bid == winning_bid]
-
-            if len(winners) == 1:
-                self.archive_current_auction(item)
-                result.update_rows.append(Row(iid=iid,
-                                              item=item,
-                                              status='Concluded',
-                                              winner=winners[0],
-                                              price=winning_bid))
-            else:
-                result.update_rows.append(Row(iid=iid,
-                                              item=item,
-                                              status='Tied',
-                                              winner=', '.join(winners),
-                                              price=winning_bid))
+            update = self.handle_auction_close(action)
+            if update:
+                result.update_rows.append(update)
 
         elif action['action'] == 'AUCTION_CANCEL':
             item = action['item_name']
@@ -76,6 +56,48 @@ class AuctionState:
     def archive_current_auction(self, item):
         self.concluded_auctions.append(self.active_auctions[item])
         del self.active_auctions[item]
+
+    def handle_auction_close(self, action):
+        item = action['item_name']
+        if item not in self.active_auctions:
+            return None
+
+        bids = self.active_auctions[item]['bids']
+        iid = self.active_auctions[item]['iid']
+        n_items = self.active_auctions[item]['item_count']
+        n_bids = len(bids)
+        sorted_bids = sorted(bids.items(), key=lambda x: x[1], reverse=True)
+
+        tie = False
+        # there are no bids. Item rots.
+        if n_bids == 0:
+            result = Row(iid=iid, item=item, status='Concluded', winner='ROT')
+        # there are at least as many items as bidders. Everyone gets loot.
+        elif n_bids <= n_items:
+            winners = [x[0] for x in sorted_bids]
+            prices = [str(x[1]) for x in sorted_bids]
+            while len(winners) < n_items:
+                winners.append(('ROT', None))
+            result = Row(iid=iid, item=item, status='Concluded', winner=', '.join(winners),
+                       price=', '.join(prices))
+        # there more more bidders than items. We have to compare bids.
+        else:
+            lowest_winning_bid = sorted_bids[n_items-1][1]
+            next_lower_bid = sorted_bids[n_items][1]
+            if lowest_winning_bid == next_lower_bid:
+                tie = True
+                tied_bids = [x for x in sorted_bids if x[1] >= lowest_winning_bid]
+                winners = ', '.join(x[0] for x in tied_bids)
+                prices = ', '.join(str(x[1]) for x in tied_bids)
+                result = Row(iid=iid, item=item, status='Tied', winner=winners, price=prices)
+            else:
+                winning_bids = sorted_bids[:n_items]
+                winners = ', '.join(x[0] for x in winning_bids)
+                prices = ', '.join(str(x[1]) for x in winning_bids)
+                result = Row(iid=iid, item=item, status='Concluded', winner=winners, price=prices)
+        if not tie:
+            self.archive_current_auction(item)
+        return result
 
 
 class ActionResult:
