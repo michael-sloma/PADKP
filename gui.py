@@ -14,18 +14,20 @@ class MainPage:
         self.master = master
         self.frame = tkinter.Frame(self.master)
 
-        columns = ['item', 'status', 'winner', 'price']
+        columns = ['item', 'item_count', 'status', 'winner', 'price']
         self.tree = ttk.Treeview(self.master, columns=columns)
         self.tree.heading('#0', text='time')
         self.tree.heading('#1', text='item')
-        self.tree.heading('#2', text='status')
-        self.tree.heading('#3', text='winner')
-        self.tree.heading('#4', text='price')
+        self.tree.heading('#2', text='count')
+        self.tree.heading('#3', text='status')
+        self.tree.heading('#4', text='winner')
+        self.tree.heading('#5', text='price')
         self.tree.column('#0', stretch=tkinter.YES)
         self.tree.column('#1', stretch=tkinter.YES)
         self.tree.column('#2', stretch=tkinter.YES)
         self.tree.column('#3', stretch=tkinter.YES)
         self.tree.column('#4', stretch=tkinter.YES)
+        self.tree.column('#5', stretch=tkinter.YES)
         self.tree.grid(row=1, columnspan=4, sticky='nsew')
 
         self.button = tkinter.Button(master, text="Load log file", command=self.open_log_file)
@@ -85,9 +87,9 @@ class MainPage:
             return
         for new_row in action_result.add_rows:
             self.tree.insert('', 0, text=new_row.timestamp.strftime('%a, %d %b %Y %H:%M'),
-                             values=(new_row.item, new_row.status, new_row.winner, new_row.price), iid=new_row.iid)
+                             values=(new_row.item, new_row.item_count, new_row.status, new_row.winner, new_row.price), iid=new_row.iid)
         for update_row in action_result.update_rows:
-            self.tree.item(update_row.iid, values=(update_row.item, update_row.status, update_row.winner,
+            self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
 
 
