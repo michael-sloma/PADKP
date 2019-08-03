@@ -25,7 +25,7 @@ class AuctionState:
             item_count = action['item_count']
             if item in self.active_auctions:
                 return result
-            iid = uuid.uuid1()
+            iid = str(uuid.uuid1())
             self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}, 'time': timestamp,
                                           'item_count':item_count}
             result.add_rows.append(Row(iid=iid, timestamp=timestamp, item=item, item_count=item_count, status='Open'))
@@ -106,7 +106,7 @@ class AuctionState:
         all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
         for auction in all_auctions_ever:
             print(auction)
-            if str(auction['iid']) == str(iid):
+            if auction['iid'] == iid:
                 return auction
         return None
 
