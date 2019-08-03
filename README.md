@@ -54,3 +54,8 @@ End an open auction without picking a winner. Perhaps the auction was somehow sc
 ## The user interface
 The user interface displays all of the auctions that it sees in your log, with the most recent auctions at the top of the window.
 
+![](https://i.imgur.com/Sh4Kkqq.png)
+
+ You can select an auction and use the "Auction details" option to see the bids for an auction.
+ 
+![](https://i.imgur.com/t7SRpsr.png)
