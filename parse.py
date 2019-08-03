@@ -3,8 +3,8 @@ import datetime as dt
 
 
 COMMAND_RE = "You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>.*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
-AUCTION_START_RE = COMMAND_RE.format('bids open')
-AUCTION_CLOSE_RE = COMMAND_RE.format('bids closed')
+AUCTION_START_RE = COMMAND_RE.format('bids\s*open')
+AUCTION_CLOSE_RE = COMMAND_RE.format('bids\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
 
 
