@@ -15,7 +15,8 @@ class AuctionState:
                 print("expiring an auction for", item)
                 self.archive_current_auction(item)
                 iid = auction['iid']
-                result.update_rows.append(Row(iid=iid, item=item, status='Expired'))
+                item_count = auction['item_count']
+                result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Expired'))
 
         if action['action'] == 'AUCTION_START':
             # create a new auction

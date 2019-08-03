@@ -6,6 +6,7 @@ import asyncio
 import threading
 import queue
 import sys
+import traceback
 
 import parse
 import auction
@@ -41,15 +42,19 @@ class MainPage:
 
         self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
         self.button.grid(row=2, column=2)
+        self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
 
         self.thread = None  # thread to asynchronously read data from the log file
 
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
+
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
         if confirm:
+            if self.thread is not None:
+                self.thread.stop()
             self.master.destroy()
             sys.exit()
 
@@ -66,7 +71,7 @@ class MainPage:
 
     def load_data_from_log_file(self, file_obj):
         if self.thread is not None:
-            self.thread.file_obj.close()
+            self.thread.stop()
         # create Thread object
         # TODO do we need to kill the old thread if it exists?
         self.thread = AsyncioThread(self.queue, file_obj=file_obj)
@@ -127,6 +132,9 @@ class AsyncioThread(threading.Thread):
         self.file_obj = file_obj
         threading.Thread.__init__(self)
 
+    def stop(self):
+        self.file_obj.close()
+
     def run(self):
         self.asyncio_loop.run_until_complete(self.do_data())
 
@@ -140,10 +148,16 @@ class AsyncioThread(threading.Thread):
             if line is None:
                 await asyncio.sleep(1)
             else:
-                action = parse.handle_line(line)
-                if action is not None:
-                    print('enqueued a line', line)
-                    self.queue.put(('', action))
+                try:
+                    action = parse.handle_line(line)
+                    if action is not None:
+                        print('enqueued a line', line)
+                        self.queue.put(('', action))
+                except Exception:
+                    print('PARSE ERROR')
+                    print('LINE', line)
+                    print(traceback.format_exc())
+                    print('')
         print('thread completed')
 
 
