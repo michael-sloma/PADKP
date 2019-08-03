@@ -22,7 +22,10 @@
     /rs !BIDS OPEN !2 Cloak of Flames || WOW THREE!! Top three bids win.
     All the winners will be shown in the user interface.
 
-*   Added an "auction details" button to display more details of the auction
+*   Added an "auction details" button to display more details of the auction.
+
+*   Added cleanup logic to the "Load log file" button. Repeatedly using the
+    button to load different files will not longer eat up system resources.
 
 
 0.0.1

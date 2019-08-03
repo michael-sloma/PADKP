@@ -65,6 +65,8 @@ class MainPage:
         self.load_data_from_log_file(f)
 
     def load_data_from_log_file(self, file_obj):
+        if self.thread is not None:
+            self.thread.file_obj.close()
         # create Thread object
         # TODO do we need to kill the old thread if it exists?
         self.thread = AsyncioThread(self.queue, file_obj=file_obj)
@@ -111,7 +113,10 @@ class AsyncioThread(threading.Thread):
     async def do_data(self):
         """ Read new lines from the log file and enqueue any new actions"""
         while True:
-            line = self.file_obj.readline()
+            try:
+                line = self.file_obj.readline()
+            except ValueError:
+                break
             if line is None:
                 await asyncio.sleep(1)
             else:
@@ -119,6 +124,7 @@ class AsyncioThread(threading.Thread):
                 if action is not None:
                     print('enqueued a line', line)
                     self.queue.put(('', action))
+        print('thread completed')
 
 
 def main():
