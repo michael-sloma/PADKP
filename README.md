@@ -11,11 +11,11 @@ All commands recognized by the parser are prefixed with an exclamation point (`!
 
 The parser can handle variations in spacing and capitalization, so the following lines all do the exact same thing:
 <pre>
-* `You tell your raid, 'bids open Singing Steel Breastplate'`
-* `You tell your raid, '!BIDS OPEN Singing Steel Breastplate'`
-* `You tell your raid, '!Bids Open Singing Steel Breastplate'`
-* `You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'`
-* `You tell your raid, '   !Bids          open    Singing Steel Breastplate         || HELP MY SPACEBAR IS STICKING'`
+* You tell your raid, 'bids open Singing Steel Breastplate'
+* You tell your raid, '!BIDS OPEN Singing Steel Breastplate'
+* You tell your raid, '!Bids Open Singing Steel Breastplate'
+* You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'
+* You tell your raid, '   !Bids          open    Singing Steel Breastplate         || HELP MY SPACEBAR IS STICKING'
 </pre>
 
 You can also start an auction for multiple identical items, by putting `!N` (where `N` is the number of items), before or after the itemlink, like this:
