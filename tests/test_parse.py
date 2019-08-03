@@ -26,6 +26,7 @@ AUCTION_OPEN_WITH_COMMENT_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!
 AUCTION_OPEN_WITH_WHITESPACE_1 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open   Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_3 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate  || TELLS TO ME'"
+AUCTION_OPEN_WITH_WHITESPACE_4 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids         open Singing Steel Breastplate  || TELLS TO ME'"
 AUCTION_OPEN_DOUBLE = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate !2 || THERE ARE TWO'"
 AUCTION_OPEN_DOUBLE_2= "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open !2 Singing Steel Breastplate  || THERE ARE TWO'"
 
@@ -51,6 +52,7 @@ BIDS_CLOSED_WITH_COMMENT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bid
      ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_1),
      ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_2),
      ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_3),
+     ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_4),
      ]
 )
 def test_auction_open(comment, bids_open_message):
