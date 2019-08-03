@@ -39,12 +39,30 @@ class MainPage:
         self.button = tkinter.Button(master, text="Load log file", command=self.open_log_file)
         self.button.grid(row=2, column=0)
 
+        self.button = tkinter.Button(master, text="Auction details",
+                                     command=self.open_details_window)
+        self.button.grid(row=2, column=1)
+
         self.thread = None  # thread to asynchronously read data from the log file
 
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
-        self.active_auctions = {}
-        self.completed_auctions = []
+
+    def open_details_window(self):
+        iid = self.tree.focus()
+        selected_row = self.tree.item(iid)
+        item = selected_row['values'][0]
+        auction = self.state.get_auction_by_iid(iid)
+
+        window = tkinter.Toplevel(self.master)
+        window.title('Auction details: {}'.format(item))
+        columns = ['name', 'bid']
+        tree = ttk.Treeview(window, columns=columns)
+        tree.heading('#0', text='name')
+        tree.heading('#1', text='bid')
+        for name, bid in sorted(auction['bids'].items(), key=lambda x: x[1]):
+            tree.insert('', 0, text=name, values=(bid,))
+        tree.grid()
 
     def open_log_file(self):
         filename = filedialog.askopenfilename()

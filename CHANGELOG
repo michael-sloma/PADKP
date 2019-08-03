@@ -20,6 +20,9 @@
 *   We can now handle auctions of multiple identical items. A multi-item auction
     is started like this:
     /rs !BIDS OPEN !2 Cloak of Flames || WOW THREE!! Top three bids win.
+    All the winners will be shown in the user interface.
+
+*   Added an "auction details" button to display more details of the auction
 
 
 0.0.1

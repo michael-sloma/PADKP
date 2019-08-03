@@ -99,6 +99,15 @@ class AuctionState:
             self.archive_current_auction(item)
         return result
 
+    def get_auction_by_iid(self, iid):
+        print('searching iid', iid)
+        all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
+        for auction in all_auctions_ever:
+            print(auction)
+            if str(auction['iid']) == str(iid):
+                return auction
+        return None
+
 
 class ActionResult:
     def __init__(self, add_rows=None, update_rows=None):
