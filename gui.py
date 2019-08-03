@@ -57,6 +57,7 @@ class MainPage:
         for name, bid in sorted(auction['bids'].items(), key=lambda x: x[1]):
             tree.insert('', 0, text=name, values=(bid,))
         tree.grid()
+        tkinter.Button(window, text="Close", command=window.destroy).grid()
 
     def open_log_file(self):
         filename = filedialog.askopenfilename()
