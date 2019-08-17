@@ -31,7 +31,9 @@ def auction_start(line):
     return None
 
 
-BID_TELL_WINDOW_RE = '(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+(?P<item>.+)\s+(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?$'
+BID_TELL_WINDOW_RE = ('(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
+                      '(?P<item>.+)\s+(?P<bid>[0-9]+)\s*'
+                      '(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?$')
 BID_TELL_RE = "(?P<bidder>[A-Z][a-z]+) tells you, '\s*(?P<item>.+) (?P<bid>[0-9]+)\s*(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?"
 def auction_bid_match(line):
     return re.match(BID_TELL_WINDOW_RE, line.contents) \
