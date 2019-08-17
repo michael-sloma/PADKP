@@ -1,5 +1,6 @@
 import pytest
 import parse
+import re
 
 def test_log_line_timestamp():
     test_line = "[Wed Jun 12 22:49:34 2019] Foobar tells the raid,  'Ha ha ha!'"
@@ -81,7 +82,20 @@ def test_auction_bid_tell_window(comment, bid_message):
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
     assert result['action'] == 'BID'
-    assert result['alt'] == ('alt' in bid_message or 'box' in bid_message)
+
+
+@pytest.mark.parametrize('comment, bid_message, expect_alt',
+                         [('regular message', BID_TELL_WINDOW, False),
+                          ('whitespace', BID_TELL_WINDOW_2, False),
+                          ('alt', BID_TELL_WINDOW_ALT_1, True),
+                          ('alt', BID_TELL_WINDOW_ALT_2, True),
+                          ('box', BID_TELL_WINDOW_ALT_3, True),
+                          ])
+def test_auction_bid_alt(comment, bid_message, expect_alt):
+    """ check that we correctly interpret an alt message"""
+    input_line = parse.LogLine(bid_message)
+    result = parse.auction_bid(input_line)
+    assert result['alt'] == expect_alt
 
 
 @pytest.mark.parametrize('comment, bids_closed_message',
