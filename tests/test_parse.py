@@ -81,6 +81,7 @@ def test_auction_bid_tell_window(comment, bid_message):
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
     assert result['action'] == 'BID'
+    assert result['alt'] == ('alt' in bid_message or 'box' in bid_message)
 
 
 @pytest.mark.parametrize('comment, bids_closed_message',
