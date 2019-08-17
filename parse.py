@@ -33,8 +33,10 @@ def auction_start(line):
 
 BID_TELL_WINDOW_RE = ('(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
                       '(?P<item>.+)\s+(?P<bid>[0-9]+)\s*'
-                      '(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?$')
-BID_TELL_RE = "(?P<bidder>[A-Z][a-z]+) tells you, '\s*(?P<item>.+) (?P<bid>[0-9]+)\s*(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?"
+                      '(dkp)?\s*(?P<alt>alt|box)?(?P<comment>\|\|.*)?$')
+BID_TELL_RE = ("(?P<bidder>[A-Z][a-z]+) tells you, "
+               "'\s*(?P<item>.+) (?P<bid>[0-9]+)\s*(dkp)?\s*"
+               "(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
 def auction_bid_match(line):
     return re.match(BID_TELL_WINDOW_RE, line.contents) \
            or re.match(BID_TELL_RE, line.contents)
@@ -44,25 +46,24 @@ def auction_bid(line):
     search_tell_window = re.search(BID_TELL_WINDOW_RE, line.contents, re.IGNORECASE)
     search_tell = re.search(BID_TELL_RE, line.contents, re.IGNORECASE)
     if search_tell_window:
-        player_name = search_tell_window.group('bidder')
-        item_name = search_tell_window.group('item')
-        value = search_tell_window.group('bid')
-        print(player_name, item_name, value)
-        return {'action': 'BID',
-                'item_name': item_name.strip(),
-                'player_name': player_name,
-                'value': int(value),
-                'timestamp': line.timestamp()}
+        matching_re = search_tell_window
     elif search_tell:
-        player_name = search_tell.group('bidder')
-        item_name = search_tell.group('item')
-        value = search_tell.group('bid')
-        return {'action': 'BID',
-                'item_name': item_name.strip(),
-                'player_name': player_name,
-                'value': int(value),
-                'timestamp': line.timestamp()}
-    return None
+        matching_re = search_tell
+    else:
+        return None
+
+    player_name = matching_re.group('bidder')
+    item_name = matching_re.group('item')
+    value = matching_re.group('bid')
+    alt = matching_re.group('alt')
+    comment = matching_re.group('comment')
+    return {'action': 'BID',
+            'item_name': item_name.strip(),
+            'player_name': player_name,
+            'value': int(value),
+            'comment': comment,
+            'alt': alt is not None,
+            'timestamp': line.timestamp()}
 
 
 def auction_close_match(line):
