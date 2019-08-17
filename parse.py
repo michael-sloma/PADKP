@@ -61,7 +61,7 @@ def auction_bid(line):
             'item_name': item_name.strip(),
             'player_name': player_name,
             'value': int(value),
-            'comment': comment,
+            'comment': comment[2:] if comment is not None else '',
             'alt': alt is not None,
             'timestamp': line.timestamp()}
 
