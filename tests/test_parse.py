@@ -35,6 +35,7 @@ BID_TELL_WINDOW_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Stee
 BID_TELL_WINDOW_3 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate  55"
 BID_TELL_WINDOW_4 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55"
 BID_TELL_WINDOW_COMMENT = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55 || I can't even use it lol"
+BID_TELL_WINDOW_DKP = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55dkp "
 BID_TELL_WINDOW_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 alt"
 BID_TELL_WINDOW_ALT_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 ALT"
 BID_TELL_WINDOW_ALT_3 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 box"
@@ -67,6 +68,10 @@ def test_auction_open(comment, bids_open_message):
       ('whitespace', BID_TELL_WINDOW_3),
       ('whitespace', BID_TELL_WINDOW_4),
       ('comment', BID_TELL_WINDOW_COMMENT),
+      ('has "dkp" in it', BID_TELL_WINDOW_DKP),
+      ('alt', BID_TELL_WINDOW_ALT_1),
+      ('alt', BID_TELL_WINDOW_ALT_2),
+      ('box', BID_TELL_WINDOW_ALT_3),
       ]
 )
 def test_auction_bid_tell_window(comment, bid_message):

@@ -31,16 +31,16 @@ def auction_start(line):
     return None
 
 
-BID_TELL_WINDOW_RE = '(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+(?P<item>.+)\s+(?P<bid>[0-9]+)\s*(\|\|.*)?$'
-BID_TELL_RE = "(?P<bidder>[A-Z][a-z]+) tells you, '\s*(?P<item>.+) (?P<bid>[0-9]+)"
+BID_TELL_WINDOW_RE = '(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+(?P<item>.+)\s+(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?$'
+BID_TELL_RE = "(?P<bidder>[A-Z][a-z]+) tells you, '\s*(?P<item>.+) (?P<bid>[0-9]+)\s*(dkp)?\s*(?P<alt>alt|box)?(\|\|.*)?"
 def auction_bid_match(line):
     return re.match(BID_TELL_WINDOW_RE, line.contents) \
            or re.match(BID_TELL_RE, line.contents)
 
 
 def auction_bid(line):
-    search_tell_window = re.search(BID_TELL_WINDOW_RE, line.contents)
-    search_tell = re.search(BID_TELL_RE, line.contents)
+    search_tell_window = re.search(BID_TELL_WINDOW_RE, line.contents, re.IGNORECASE)
+    search_tell = re.search(BID_TELL_RE, line.contents, re.IGNORECASE)
     if search_tell_window:
         player_name = search_tell_window.group('bidder')
         item_name = search_tell_window.group('item')
