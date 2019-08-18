@@ -53,6 +53,12 @@ You bid on an auction by sending a tell to the person who opened the auction. Th
 * `You tell Soandso, 'Cloak of Flames 50|| hope I win it'`
 * `You tell Soandso, ' Cloak of Flames   50'`
 
+If the bid is for an alt or box, you need to say so, like this
+
+* `You tell Soandso, ' Cloak of Flames 50 alt'`
+* `You tell Soandso, ' Cloak of Flames 50 box'`
+
+
 The bid will NOT register if you send it before the auction opens, so wait until you see a !BIDS OPEN message before you send a tell. The bid will NOT register if you don't follow the format: the item link, then the bid. Only whole number bids are accepted, no fractions.
 
 #### Close an auction
