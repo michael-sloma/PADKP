@@ -86,4 +86,4 @@ The user interface displays all of the auctions that it sees in your log, with t
 
  You can select an auction and use the "Auction details" option to see the bids for an auction.
  
-![](https://i.imgur.com/t7SRpsr.png)
+![](https://i.imgur.com/wHxbSHv.png)
