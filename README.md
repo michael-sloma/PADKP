@@ -8,6 +8,7 @@ This bot runs alongside your EverQuest client, reads your log file, and helps yo
 * Wait until you see a tell that looks like this: `Soandso tells the raid, '!Bids Open Cloak of Flames || TELLS TO ME'`
 * Send a tell to that player. Send the item link, then your bid. Follow this format: `/t Soandso Cloak of Flames 50`
 * Make sure you use the *item link* in your tell. You don't technically *have* to, but doing so will ensure your spelling and spacing was right.
+* If you're bidding for an alt, send item link, then your bid, then "alt" or "box", like this: `/t Soandso Cloak of Flames 50 alt`
 * Whole numbers of points only, no fractions.
 * If you send repeated bids for the same item, the LAST one is the one that counts.
 * Good luck!
