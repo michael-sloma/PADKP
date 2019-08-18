@@ -1,3 +1,11 @@
+0.0.3
+*	The parser will correctly interpret bid messages like 'Cloak of Flames
+	50dkp'. The additional 'dkp' will no longer cause the bid to be skipped
+
+*	Added handling for alt/box bids. An alt bid is specified like this:
+	'/t Lyfeless Cloak of Flames 50 alt' or '/t Lyfeless Cloak of Flames 50 box'
+	Alts will only win auctions if there is no non-alt bid of 5dkp or greater.
+
 0.0.2
 *   Internal refactoring to separate the bidding rule logic from the GUI. This
     makes it feasible to write more complex rules.

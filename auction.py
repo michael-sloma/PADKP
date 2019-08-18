@@ -1,6 +1,8 @@
 import uuid
 import datetime as dt
 
+MAIN_BEATS_ALTS_BID = 5
+
 
 class AuctionState:
     def __init__(self):
@@ -70,7 +72,9 @@ class AuctionState:
         iid = self.active_auctions[item]['iid']
         n_items = self.active_auctions[item]['item_count']
         n_bids = len(bids)
-        sorted_bids = sorted(bids.items(), key=lambda x: x[1]['value'], reverse=True)
+
+        # check if a main bid 5 or more. if so, alts can't beat mains
+        sorted_bids = sort_bids(bids)
 
         tie = False
         # there are no bids. Item rots.
@@ -86,11 +90,6 @@ class AuctionState:
                        price=', '.join(prices))
         # there more more bidders than items. We have to compare bids.
         else:
-            max_main_bid = max([0] + [bid[1]['value'] for bid in sorted_bids])
-            if max_main_bid >= 5:
-                # no alt bids
-                sorted_bids = [bid for bid in sorted_bids if not bid[1]['alt']]
-
             lowest_winning_bid = sorted_bids[n_items-1][1]
             next_lower_bid = sorted_bids[n_items][1]
             if lowest_winning_bid == next_lower_bid:
@@ -116,6 +115,16 @@ class AuctionState:
             if auction['iid'] == iid:
                 return auction
         return None
+
+
+def sort_bids(bids):
+    max_main_bid = max([0] + [bid['value'] for bid in bids.values() if not bid['alt']])
+    if max_main_bid >= MAIN_BEATS_ALTS_BID:
+        # alts can't beat mains
+        bid_comparison = lambda bid: (not bid[1]['alt'], bid[1]['value'])
+    else:
+        bid_comparison = lambda bid: bid[1]['value']
+    return sorted(bids.items(), key=bid_comparison, reverse=True)
 
 
 class ActionResult:
