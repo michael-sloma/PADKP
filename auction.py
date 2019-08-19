@@ -90,11 +90,11 @@ class AuctionState:
                        price=', '.join(prices))
         # there more more bidders than items. We have to compare bids.
         else:
-            lowest_winning_bid = sorted_bids[n_items-1][1]
-            next_lower_bid = sorted_bids[n_items][1]
+            lowest_winning_bid = sorted_bids[n_items-1][1]['value']
+            next_lower_bid = sorted_bids[n_items][1]['value']
             if lowest_winning_bid == next_lower_bid:
                 tie = True
-                tied_bids = [x for x in sorted_bids if x[1] >= lowest_winning_bid]
+                tied_bids = [x for x in sorted_bids if x[1]['value'] >= lowest_winning_bid]
                 winners = ', '.join(x[0] for x in tied_bids)
                 prices = ', '.join(str(x[1]['value']) for x in tied_bids)
                 result = Row(iid=iid, item=item, item_count=n_items, status='Tied', winner=winners, price=prices)
