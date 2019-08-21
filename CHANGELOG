@@ -1,3 +1,6 @@
+0.0.4
+*   Fixed a bug that broke tied auctions.
+
 0.0.3
 *	The parser will correctly interpret bid messages like 'Cloak of Flames
 	50dkp'. The additional 'dkp' will no longer cause the bid to be skipped
