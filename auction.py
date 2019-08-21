@@ -13,6 +13,9 @@ class AuctionState:
         # before we do anything else, we check if any auctions need to be expired
         result = ActionResult()
         for item, auction in list(self.active_auctions.items()):
+            print(action)
+            print(action['timestamp'])
+            print(auction['time'])
             if action['timestamp'] - auction['time'] > dt.timedelta(minutes=30):
                 print("expiring an auction for", item)
                 self.archive_current_auction(item)
