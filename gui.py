@@ -49,6 +49,33 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
+        def hello():
+            iid = self.tree.selection()
+            vals = self.tree.item(iid)['values']
+            try:
+                message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+                self.master.clipboard_clear()
+                self.master.clipboard_append(message)
+                print(message)
+            except IndexError:
+                print("can't copy grats message, nothing selected")
+                return
+
+
+        menu = tkinter.Menu(self.frame, tearoff=0)
+        menu.add_command(label="Copy grats message", command=hello)
+        #menu.add_command(label="Make a correction", command=hello)
+
+        def popup(event):
+            print("popup was called")
+            self.tree.focus()
+            menu.post(event.x_root, event.y_root)
+
+        # attach popup to canvas
+        self.tree.bind("<Control-Button-1>", popup)
+        self.tree.bind("<Button-3>", popup)
+        print("LOADED")
+
 
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
