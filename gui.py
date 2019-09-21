@@ -40,8 +40,12 @@ class MainPage:
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
-        self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
+        self.button = tkinter.Button(master, text="Write report to file", command=self.write_report)
         self.button.grid(row=2, column=2)
+
+        self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
+        self.button.grid(row=2, column=3)
+
         self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
 
         self.thread = None  # thread to asynchronously read data from the log file
@@ -96,6 +100,23 @@ class MainPage:
         filename = filedialog.askopenfilename()
         f = open(filename)
         self.load_data_from_log_file(f)
+
+    def write_report(self):
+        filename = filedialog.asksaveasfilename()
+        f = open(filename, 'w')
+        self._write_report(f)
+        f.close()
+
+    def _write_report(self, f):
+        for row_id in self.tree.get_children():
+            vals = self.tree.item(row_id)['values']
+            if vals[2] == 'Concluded':
+                item = vals[0]
+                winner = vals[3]
+                cost = vals[4]
+                report_line = '{} to {} for {}\n'.format(item, winner, cost) if winner != 'ROT' \
+                              else '{} rotted\n'.format(item)
+                f.write(report_line)
 
     def clear_data(self):
         if self.thread is not None:
