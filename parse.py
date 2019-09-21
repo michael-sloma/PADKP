@@ -107,17 +107,21 @@ AUCTION_AWARD_RE = ("You tell your raid, "
 
 AUCTION_AWARD_RE = "You tell your raid, '\s*!correction\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
 
+
+def auction_award_match(line):
+    return re.match(AUCTION_AWARD_RE, line.contents, re.IGNORECASE)
+
+
 def auction_award(line):
     search = re.search(AUCTION_AWARD_RE,
                        line.contents,
                        re.IGNORECASE)
-    print (search)
     if search:
-        item_name = search.group('item')
+        item_name = search.group('item').strip()
         award = search.group('award').replace(',', ' ')
         winners = award.split()[::2]
         bids = award.split()[1::2]
-        return {'action': 'AUCTION_CORRECTION',
+        return {'action': 'AUCTION_AWARD',
                 'item_name': item_name,
                 'winners': winners,
                 'bids': bids,
@@ -154,6 +158,8 @@ def handle_line(raw_line):
         return auction_close(line)
     elif auction_cancel_match(line):
         return auction_cancel(line)
+    elif auction_award_match(line):
+        return auction_award(line)
     else:
         return None
 

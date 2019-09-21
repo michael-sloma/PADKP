@@ -13,9 +13,6 @@ class AuctionState:
         # before we do anything else, we check if any auctions need to be expired
         result = ActionResult()
         for item, auction in list(self.active_auctions.items()):
-            print(action)
-            print(action['timestamp'])
-            print(auction['time'])
             if action['timestamp'] - auction['time'] > dt.timedelta(minutes=30):
                 print("expiring an auction for", item)
                 self.archive_current_auction(item)
@@ -59,6 +56,17 @@ class AuctionState:
             item_count = self.active_auctions[item]['item_count']
             del self.active_auctions[item]
             result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
+
+        elif action['action'] == 'AUCTION_AWARD':
+            item = action['item_name']
+            auction = self.get_most_recent_auction_by_name(item)
+            iid = auction['iid']
+            item_count = auction['item_count']
+
+            winners = ', '.join(action['winners'])
+            bids = ', '.join(action['bids'])
+            result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Concluded',
+                                          winner=winners, price=bids))
 
         return result
 
@@ -114,8 +122,16 @@ class AuctionState:
         print('searching iid', iid)
         all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
         for auction in all_auctions_ever:
-            print(auction)
             if auction['iid'] == iid:
+                return auction
+        return None
+
+    def get_most_recent_auction_by_name(self, item_name):
+        print('searching by name', item_name)
+        all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
+        all_auctions_ever = sorted(all_auctions_ever, key=lambda auc: auc['time'], reverse=True)
+        for auction in all_auctions_ever:
+            if auction['item'] == item_name:
                 return auction
         return None
 
