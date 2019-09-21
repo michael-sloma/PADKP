@@ -125,3 +125,16 @@ def test_auction_start_count():
     input_line = parse.LogLine(AUCTION_OPEN_DOUBLE_2)
     result = parse.auction_start(input_line)
     assert result['item_count'] == 2
+
+
+def test_auction_award():
+    line = parse.LogLine("[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100'")
+    result = parse.auction_award(line)
+    assert result['winners'] == ['Lyfeless']
+    assert result['bids'] == ['100']
+
+def test_auction_award_2():
+    line = parse.LogLine("[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100, Quaff 50'")
+    result = parse.auction_award(line)
+    assert result['winners'] == ['Lyfeless', 'Quaff']
+    assert result['bids'] == ['100', '50']

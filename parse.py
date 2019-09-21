@@ -98,6 +98,32 @@ def auction_cancel(line):
                 'timestamp': line.timestamp()}
     return None
 
+AUCTION_AWARD_RE = ("You tell your raid, "
+                    "'\s*!correction\s*!award\s*"
+                    "(?P<item>.*?)\s+"
+                    "(?P<name>[A-Z][a-z]+)\s+"
+                    "(?P<value>[0-9]+)\s+"
+                    "(?P<comment>\|\|.*)?'$")
+
+AUCTION_AWARD_RE = "You tell your raid, '\s*!correction\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
+
+def auction_award(line):
+    search = re.search(AUCTION_AWARD_RE,
+                       line.contents,
+                       re.IGNORECASE)
+    print (search)
+    if search:
+        item_name = search.group('item')
+        award = search.group('award').replace(',', ' ')
+        winners = award.split()[::2]
+        bids = award.split()[1::2]
+        return {'action': 'AUCTION_CORRECTION',
+                'item_name': item_name,
+                'winners': winners,
+                'bids': bids,
+                'timestamp': line.timestamp()}
+    return None
+
 
 
 class LogLine:
