@@ -40,8 +40,8 @@ class MainPage:
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
-        self.button = tkinter.Button(master, text="Write report to file", command=self.write_report)
-        self.button.grid(row=2, column=2)
+        #self.button = tkinter.Button(master, text="Write report to file", command=self.write_report)
+        #self.button.grid(row=2, column=2)
 
         self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
@@ -53,22 +53,9 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
-        def hello():
-            iid = self.tree.selection()
-            vals = self.tree.item(iid)['values']
-            try:
-                message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
-                self.master.clipboard_clear()
-                self.master.clipboard_append(message)
-                print(message)
-            except IndexError:
-                print("can't copy grats message, nothing selected")
-                return
-
-
         menu = tkinter.Menu(self.frame, tearoff=0)
-        menu.add_command(label="Copy grats message", command=hello)
-        #menu.add_command(label="Make a correction", command=hello)
+        menu.add_command(label="Copy grats message", command=self.copy_grats_message)
+        menu.add_command(label="Copy text dump", command=self.copy_report)
 
         def popup(event):
             print("popup was called")
@@ -101,22 +88,44 @@ class MainPage:
         f = open(filename)
         self.load_data_from_log_file(f)
 
+    def copy_grats_message(self):
+        iid = self.tree.selection()
+        vals = self.tree.item(iid)['values']
+        try:
+            message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+            self.master.clipboard_clear()
+            self.master.clipboard_append(message)
+            print(message)
+        except IndexError:
+            print("can't copy grats message, nothing selected")
+            return
+
+    def copy_report(self):
+        self.master.clipboard_clear()
+        self.master.clipboard_append(self._text_report())
+
     def write_report(self):
         filename = filedialog.asksaveasfilename()
         f = open(filename, 'w')
-        self._write_report(f)
+        f.write(self._text_report())
         f.close()
 
-    def _write_report(self, f):
+    def _text_report(self):
+        report = []
         for row_id in self.tree.get_children():
-            vals = self.tree.item(row_id)['values']
+            row = self.tree.item(row_id)
+            timestamp = row['text']
+            vals = row['values']
+            print(vals, vals[2])
             if vals[2] == 'Concluded':
                 item = vals[0]
                 winner = vals[3]
                 cost = vals[4]
-                report_line = '{} to {} for {}\n'.format(item, winner, cost) if winner != 'ROT' \
-                              else '{} rotted\n'.format(item)
-                f.write(report_line)
+                report_line = '{}: {} to {} for {}'.format(timestamp, item, winner, cost) if winner != 'ROT' \
+                              else '{}: {} rotted'.format(timestamp, item)
+                report.append(report_line)
+        print("text report: ", report)
+        return '\n'.join(report)
 
     def clear_data(self):
         if self.thread is not None:
