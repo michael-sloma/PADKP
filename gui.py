@@ -96,7 +96,7 @@ class MainPage:
             self.load_data_from_log_file(f)
 
     def copy_grats_message(self):
-        iid = self.tree.selection()
+        iid = self.tree.focus()
         vals = self.tree.item(iid)['values']
         try:
             message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])

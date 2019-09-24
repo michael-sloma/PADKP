@@ -1,3 +1,7 @@
+0.0.7
+*   Copy grats message should not work as expected when multiple rows are
+    selected
+
 0.0.6
 *   Added keyboard shortcuts for most operations
 
