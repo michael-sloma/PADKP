@@ -79,6 +79,15 @@ If you do not close the auction, it will expire after 30 minutes. This is to pre
 End an open auction without picking a winner. Perhaps the auction was somehow screwed up, and you want to start over. Or perhaps there was a complex situation and you want to switch to handling the item manually.
 
 
+#### Override an auction result
+`/rs !CORRECTION !AWARD itemlink !TO Player DKP-value`
+
+Override the result of an auction to show it as concluded in favor of the specified player for the specified value. Examples:
+* `You tell your raid, '!CORRECTION !AWARD Cloak of Flames !TO Quaff 30'`
+* `You tell your raid, '!CORRECTION !AWARD Cloak of Flames !TO Quaff 30 Lyfeless 35'`
+* `You tell your raid, '!CORRECTION !AWARD Cloak of Flames !TO Quaff 30, Lyfeless 35'`
+
+
 ## The user interface
 The user interface displays all of the auctions that it sees in your log, with the most recent auctions at the top of the window.
 
