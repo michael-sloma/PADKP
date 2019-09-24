@@ -67,11 +67,13 @@ class MainPage:
         # add keyboard shortcuts
         self.tree.bind("<Control-f>", lambda _: self.open_log_file())
         self.tree.bind("<Control-c>", lambda _: self.copy_report_from_selection())
+        self.tree.bind("<Control-C>", lambda _: self.copy_report())
         self.tree.bind("<Control-g>", lambda _: self.copy_grats_message())
         self.tree.bind("<Control-q>", lambda _: self.confirm_quit())
         self.tree.bind("<Control-d>", lambda _: self.open_details_window())
-        print("LOADED")
 
+        self.master.after(1, self.tree.focus_force)
+        print("LOADED")
 
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
@@ -86,12 +88,12 @@ class MainPage:
         auction = self.state.get_auction_by_iid(iid)
         DetailsWindow(self.master, auction)
 
-
     def open_log_file(self):
         self.clear_data()
         filename = filedialog.askopenfilename()
-        f = open(filename)
-        self.load_data_from_log_file(f)
+        if filename:
+            f = open(filename)
+            self.load_data_from_log_file(f)
 
     def copy_grats_message(self):
         iid = self.tree.selection()
