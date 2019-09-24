@@ -33,17 +33,14 @@ class MainPage:
         self.tree.column('#5', stretch=tkinter.YES)
         self.tree.grid(row=1, columnspan=4, sticky='nsew')
 
-        self.button = tkinter.Button(master, text="Load log file", command=self.open_log_file)
+        self.button = tkinter.Button(master, text="Load log file (Ctrl-F)", command=self.open_log_file)
         self.button.grid(row=2, column=0)
 
-        self.button = tkinter.Button(master, text="Auction details",
+        self.button = tkinter.Button(master, text="Auction details (Ctrl-D)",
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
-        #self.button = tkinter.Button(master, text="Write report to file", command=self.write_report)
-        #self.button.grid(row=2, column=2)
-
-        self.button = tkinter.Button(master, text="Close", command=self.confirm_quit)
+        self.button = tkinter.Button(master, text="Close (Ctrl-Q)", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
 
         self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
@@ -54,8 +51,9 @@ class MainPage:
         self.state = auction.AuctionState()
 
         menu = tkinter.Menu(self.frame, tearoff=0)
-        menu.add_command(label="Copy grats message", command=self.copy_grats_message)
-        menu.add_command(label="Copy text dump", command=self.copy_report)
+        menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
 
         def popup(event):
             print("popup was called")
@@ -65,6 +63,13 @@ class MainPage:
         # attach popup to canvas
         self.tree.bind("<Control-Button-1>", popup)
         self.tree.bind("<Button-3>", popup)
+
+        # add keyboard shortcuts
+        self.tree.bind("<Control-f>", lambda _: self.open_log_file())
+        self.tree.bind("<Control-c>", lambda _: self.copy_report_from_selection())
+        self.tree.bind("<Control-g>", lambda _: self.copy_grats_message())
+        self.tree.bind("<Control-q>", lambda _: self.confirm_quit())
+        self.tree.bind("<Control-d>", lambda _: self.open_details_window())
         print("LOADED")
 
 
@@ -101,18 +106,24 @@ class MainPage:
             return
 
     def copy_report(self):
+        report = self._text_report(self.tree.get_children())
         self.master.clipboard_clear()
-        self.master.clipboard_append(self._text_report())
+        self.master.clipboard_append(report)
+
+    def copy_report_from_selection(self):
+        report = self._text_report(self.tree.selection())
+        self.master.clipboard_clear()
+        self.master.clipboard_append(report)
 
     def write_report(self):
         filename = filedialog.asksaveasfilename()
         f = open(filename, 'w')
-        f.write(self._text_report())
+        f.write(self._text_report(self.tree.get_children()))
         f.close()
 
-    def _text_report(self):
+    def _text_report(self, auction_iids):
         report = []
-        for row_id in self.tree.get_children():
+        for row_id in auction_iids:
             row = self.tree.item(row_id)
             timestamp = row['text']
             vals = row['values']
