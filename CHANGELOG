@@ -1,6 +1,7 @@
 0.0.7
 *   Copy grats message should now work as expected when multiple rows are
     selected
+*   Bid cutoff where mains automatically beat alts increased to 10 for Velious.
 
 0.0.6
 *   Added keyboard shortcuts for most operations
