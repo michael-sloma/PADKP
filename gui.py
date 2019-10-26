@@ -7,7 +7,10 @@ import threading
 import queue
 import sys
 import traceback
+import datetime as dt
+import os
 
+import api_client
 import parse
 import auction
 
@@ -40,6 +43,9 @@ class MainPage:
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
+        self.button = tkinter.Button(master, text="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        self.button.grid(row=2, column=2)
+
         self.button = tkinter.Button(master, text="Close (Ctrl-Q)", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
 
@@ -54,6 +60,7 @@ class MainPage:
         menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
         menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
         menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
 
         def popup(event):
             print("popup was called")
@@ -71,6 +78,8 @@ class MainPage:
         self.tree.bind("<Control-g>", lambda _: self.copy_grats_message())
         self.tree.bind("<Control-q>", lambda _: self.confirm_quit())
         self.tree.bind("<Control-d>", lambda _: self.open_details_window())
+        self.tree.bind("<Control-b>", lambda _: self.charge_dkp())
+        self.tree.bind("<Control-w>", lambda _: self.open_award_dkp_window())
 
         self.master.after(1, self.tree.focus_force)
         print("LOADED")
@@ -82,6 +91,9 @@ class MainPage:
                 self.thread.stop()
             self.master.destroy()
             sys.exit()
+
+    def open_award_dkp_window(self):
+        AwardDkpWindow(self.master)
 
     def open_details_window(self):
         iid = self.tree.focus()
@@ -116,6 +128,40 @@ class MainPage:
         report = self._text_report(self.tree.selection())
         self.master.clipboard_clear()
         self.master.clipboard_append(report)
+
+    def charge_dkp(self):
+        selected = self.tree.selection()
+
+        charges = []
+        for row_id in selected:
+            row = self.tree.item(row_id)
+            timestamp = row['text']
+            vals = row['values']
+            if vals[2] != 'Concluded':
+                continue
+            item = vals[0]
+            winners = [x.strip() for x in vals[3].split(',')]
+            costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
+            time = dt.datetime.strptime(timestamp, '%a, %d %b %Y %H:%M').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+            for winner, cost in zip(winners, costs):
+                if winner != 'ROT':
+                    charges.append({'character': winner,
+                                    'item_name': item,
+                                    'value': cost,
+                                    'time': time,
+                                    'notes': ''})
+        charges_human_readable = ['{} to {} for {}'.format(x['item_name'], x['character'], x['value'])
+                                  for x in charges]
+        confirm = messagebox.askyesno('', '\n'.join(charges_human_readable) + "\n\nCharge DKP?")
+        if confirm:
+            for charge in charges:
+                result = api_client.charge_dkp(**charge)
+                if result.status_code != 201:
+                    err_msg = '{} could not be charged to {}\nSend Quaff a bug report\n\n{}'\
+                        .format(charge['item_name'], charge['character'], result.text)
+                    messagebox.showerror('Failed to charge', err_msg)
+                print(result.status_code)
 
     def write_report(self):
         filename = filedialog.asksaveasfilename()
@@ -198,6 +244,68 @@ class DetailsWindow:
             values = (bid['value'], 'yes' if bid['alt'] else 'no', bid['comment'])
             self.tree.insert('', 0, text=name, values=values)
         self.window.after(1000, self.redraw)
+
+
+class AwardDkpWindow:
+    def __init__(self, master):
+        self.filename = filedialog.askopenfilename()
+        short_filename = os.path.split(self.filename)[-1]
+
+        self.window = tkinter.Toplevel(master)
+        self.window.title('Award DKP')
+
+        self.file_label = tkinter.Label(self.window, text=short_filename)
+        self.file_label.grid(row=0, column=0, columnspan=2, sticky=tkinter.E+tkinter.W)
+
+        self.type_choice = tkinter.StringVar(self.window)
+        choices = ['Time', "Boss Kill", "Other"]
+        self.type_choice_menu = tkinter.OptionMenu(self.window, self.type_choice, *choices)
+        self.type_choice_menu.grid(row=1, column=1, columnspan=2, sticky=tkinter.E+tkinter.W)
+
+        self.value_label = tkinter.Label(self.window, text="DKP")
+        self.value_entry = tkinter.Entry(self.window)
+        self.value_label.grid(row=2, column=0, sticky=tkinter.W)
+        self.value_entry.grid(row=2, column=1, sticky=tkinter.W)
+
+        self.notes_label = tkinter.Label(self.window, text="Notes")
+        self.notes_entry = tkinter.Entry(self.window)
+        self.notes_label.grid(row=3, column=0, sticky=tkinter.W)
+        self.notes_entry.grid(row=3, column=1, sticky=tkinter.W)
+
+        self.award_button = tkinter.Button(self.window, text="Award DKP", command=self.award_dkp)
+        self.close_button = tkinter.Button(self.window, text="Cancel", command=self.window.destroy)
+        self.award_button.grid(row=4, column=0)
+        self.close_button.grid(row=5, column=0)
+
+    def award_dkp(self):
+        try:
+            value = int(self.value_entry.get())
+        except ValueError:
+            messagebox.showerror("", "DKP must be a number")
+            return
+
+        try:
+            type = {'Time': 'TA',
+                    'Boss Kill': 'BK',
+                    'Other': '?'}[self.type_choice.get()]
+        except KeyError:
+            messagebox.showerror("", "Must choose time, boss kill, or other")
+            return
+
+        try:
+            result = api_client.award_dkp_from_dump(self.filename,
+                                                    type,
+                                                    value,
+                                                    self.notes_entry.get()
+                                                    )
+        except ValueError:
+            messagebox.showerror("", "Action Failed, no DKP awarded")
+            raise
+        if result.status_code == 201:
+            messagebox.showinfo("", "DKP awarded")
+            self.window.destroy()
+        else:
+            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
 
 
 class AsyncioThread(threading.Thread):
