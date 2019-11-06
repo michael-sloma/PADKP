@@ -317,6 +317,7 @@ class AsyncioThread(threading.Thread):
         self.queue = queue
         self.max_data = max_data
         self.file_obj = file_obj
+        self.active_items = set()
         threading.Thread.__init__(self)
 
     def stop(self):
@@ -336,10 +337,14 @@ class AsyncioThread(threading.Thread):
                 await asyncio.sleep(1)
             else:
                 try:
-                    action = parse.handle_line(line)
+                    action = parse.handle_line(line, self.active_items)
                     if action is not None:
                         print('enqueued a line', line)
                         self.queue.put(('', action))
+                        if action['action'] == 'AUCTION_START':
+                            self.active_items.add(action['item_name'])
+                        if action['action'] == 'AUCTION_CLOSE' or action['action'] == 'AUCTION_CANCEL':
+                            self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')
                     print('LINE', line)

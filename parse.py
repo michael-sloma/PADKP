@@ -31,39 +31,31 @@ def auction_start(line):
     return None
 
 
-BID_TELL_WINDOW_RE = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
-                      r'(?P<item>.+)\s+(?P<bid>[0-9]+)\s*'
-                      r'(dkp)?\s*(?P<alt>alt|box)?\s*(?P<comment>\|\|.*)?$')
-BID_TELL_RE = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
-               r"'\s*(?P<item>.+)\s+(?P<bid>[0-9]+)\s*(dkp)?\s*"
-               r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
-def auction_bid_match(line):
-    return re.match(BID_TELL_WINDOW_RE, line.contents, re.IGNORECASE) \
-           or re.match(BID_TELL_RE, line.contents, re.IGNORECASE)
-
-
-def auction_bid(line):
-    search_tell_window = re.search(BID_TELL_WINDOW_RE, line.contents, re.IGNORECASE)
-    search_tell = re.search(BID_TELL_RE, line.contents, re.IGNORECASE)
-    if search_tell_window:
-        matching_re = search_tell_window
-    elif search_tell:
-        matching_re = search_tell
-    else:
-        return None
-
-    player_name = matching_re.group('bidder')
-    item_name = matching_re.group('item')
-    value = matching_re.group('bid')
-    alt = matching_re.group('alt')
-    comment = matching_re.group('comment')
-    return {'action': 'BID',
-            'item_name': item_name.strip(),
-            'player_name': player_name,
-            'value': int(value),
-            'comment': comment[2:] if comment is not None else '',
-            'alt': alt is not None,
-            'timestamp': line.timestamp()}
+def auction_bid(line, active_items):
+    for item in active_items:
+        window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
+                              rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
+                              r'(dkp)?\s*(?P<alt>alt|box)?\s*(?P<comment>\|\|.*)?$')
+        direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
+                              rf"'\s*(?P<item>{item})\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
+                              r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
+        match = re.match(window_bid_format, line.contents, re.IGNORECASE) \
+               or re.match(direct_tell_format, line.contents, re.IGNORECASE)
+        if match is not None:
+            player_name = match.group('bidder')
+            item_name = match.group('item')
+            value = match.group('bid')
+            alt = match.group('alt')
+            comment = match.group('comment')
+            return {'action': 'BID',
+                    'item_name': item_name.strip(),
+                    'player_name': player_name,
+                    'value': int(value),
+                    'comment': comment[2:] if comment is not None else '',
+                    'alt': alt is not None,
+                    'timestamp': line.timestamp()}
+    return None
+    
 
 
 def auction_close_match(line):
@@ -144,7 +136,7 @@ def pre_filter(raw_line):
     return re.match("^.{27}[A-Z][a-z]* ((tells the|tell your) raid|tells you|->)", raw_line)
 
 
-def handle_line(raw_line):
+def handle_line(raw_line, active_items):
     """ returns a description of the action to be taken based on the line, if we
     recognize it, or None"""
     if not pre_filter(raw_line):
@@ -152,14 +144,14 @@ def handle_line(raw_line):
     line = LogLine(raw_line)
     if auction_start_match(line):
         return auction_start(line)
-    elif auction_bid_match(line):
-        return auction_bid(line)
-    elif auction_close_match(line):
+    match = auction_bid(line, active_items)
+    if match:
+        return match
+    if auction_close_match(line):
         return auction_close(line)
-    elif auction_cancel_match(line):
+    if auction_cancel_match(line):
         return auction_cancel(line)
-    elif auction_award_match(line):
+    if auction_award_match(line):
         return auction_award(line)
-    else:
-        return None
+    return None
 

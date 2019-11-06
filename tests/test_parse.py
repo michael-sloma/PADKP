@@ -59,6 +59,8 @@ BIDS_CLOSED_WITH_TWO_WHITESPACE_AFTER = "[Wed Jun 12 23:24:33 2019] You tell you
 BIDS_CLOSED_WITH_WHITESPACE_BEFORE = "[Wed Jun 12 23:24:33 2019] You tell your raid, ' !Bids closed Singing Steel Breastplate'"
 BIDS_CLOSED_WITH_COMMENT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate || tells to Quaff'"
 
+DEFAULT_ITEMS = set(['Singing Steel Breastplate'])
+
 @pytest.mark.parametrize('comment, bids_open_message',
     [('regular message', AUCTION_OPEN),
      ('comment message', AUCTION_OPEN_WITH_COMMENT),
@@ -90,7 +92,7 @@ def test_auction_open(comment, bids_open_message):
 )
 def test_auction_bid_tell_window(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -112,7 +114,7 @@ def test_auction_bid_tell_window(comment, bid_message):
 )
 def test_auction_bid_tell(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -129,7 +131,8 @@ def test_auction_bid_tell(comment, bid_message):
 def test_auction_bid_alt(comment, bid_message, expect_alt):
     """ check that we correctly interpret an alt message"""
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
+    assert result is not None
     assert result['alt'] == expect_alt
 
 

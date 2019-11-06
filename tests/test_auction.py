@@ -13,7 +13,7 @@ def test_whole_auction_case_1():
     ]
     for line in lines:
         # we assume that every action was parsed properly. parse failures will cause a type error here
-        action = parse.handle_line(line)
+        action = parse.handle_line(line, set(['Cloak of Flames']))
         auc.update(action)
     finished_auction = auc.concluded_auctions[0]
     assert finished_auction['item'] == 'Cloak of Flames'
@@ -32,7 +32,7 @@ def test_whole_auction_case_2():
         "[Wed Jun 12 23:07:33 2019] You tell your raid, '!Bids closed Green Dragon Scale'",
     ]
     for line in lines:
-        action = parse.handle_line(line)
+        action = parse.handle_line(line, set(['Cloak of Flames', 'Green Dragon Scale']))
         auc.update(action)
     assert len(auc.concluded_auctions) == 0  # bids are tied, auction wasn't completed
     tied_auction = list(auc.active_auctions.values())[0]
@@ -54,7 +54,7 @@ def test_whole_auction_case_3():
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Amulet of Necropotence'",
     ]
     for line in lines:
-        action = parse.handle_line(line)
+        action = parse.handle_line(line, set(['Amulet of Necropotence']))
         # we assume that every action was parsed properly. parse failures will cause a type error here
         update = auc.update(action)
 
@@ -73,7 +73,7 @@ def test_whole_auction_case_4():
         "[Wed Jun 23 23:24:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Baz 30'",
     ]
     for line in lines:
-        action = parse.handle_line(line)
+        action = parse.handle_line(line, set(['Cloak of Flames']))
         # we assume that every action was parsed properly. parse failures will cause a type error here
         update = auc.update(action)
     assert len(auc.concluded_auctions) == 1
