@@ -80,3 +80,17 @@ def test_whole_auction_case_4():
     assert update.update_rows[0].winner == 'Baz'
     assert update.update_rows[0].price == '30'
 
+def test_failed_bid_case():
+    auc = auction.AuctionState()
+    lines = [
+        "[Wed Jun 23 23:24:33 2019] You tell your raid, '!Bids open !2 Cloak of Flames'",
+        "[Wed Jun 23 23:07:49 2019] Foo -> Quaff: Cloak of Flames  35",
+        "[Wed Jun 23 23:07:49 2019] Bar -> Quaff: Cloak of Flames  56",
+        "[Wed Jun 23 23:07:49 2019] Bar -> Quaff: I don't understand the rules, help?",
+    ]
+    for line in lines:
+        action = parse.handle_line(line, set(['Cloak of Flames']))
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        update = auc.update(action)
+    assert update.status_messages[0] == "Failed to parse bid: Bar -> Quaff: I don't understand the rules, help?"
+

@@ -59,6 +59,8 @@ BIDS_CLOSED_WITH_TWO_WHITESPACE_AFTER = "[Wed Jun 12 23:24:33 2019] You tell you
 BIDS_CLOSED_WITH_WHITESPACE_BEFORE = "[Wed Jun 12 23:24:33 2019] You tell your raid, ' !Bids closed Singing Steel Breastplate'"
 BIDS_CLOSED_WITH_COMMENT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate || tells to Quaff'"
 
+FAILED_BID = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'I like apples'"
+
 DEFAULT_ITEMS = set(['Singing Steel Breastplate'])
 
 @pytest.mark.parametrize('comment, bids_open_message',
@@ -120,6 +122,15 @@ def test_auction_bid_tell(comment, bid_message):
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
     assert result['action'] == 'BID'
+
+def test_failed_bid():
+    result = parse.handle_line(FAILED_BID, DEFAULT_ITEMS)
+    assert result is not None
+    assert result['action'] == 'FAILED_BID'
+
+def test_failed_bid_outside_auctions():
+    result = parse.handle_line(FAILED_BID, set())
+    assert result is None
 
 @pytest.mark.parametrize('comment, bid_message, expect_alt',
                          [('regular message', BID_TELL_WINDOW, False),

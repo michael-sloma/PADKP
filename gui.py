@@ -49,6 +49,15 @@ class MainPage:
         self.button = tkinter.Button(master, text="Close (Ctrl-Q)", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
 
+        self.status_window = tkinter.Text(master, height= 10, wrap="word")
+        self.status_window.grid(row=3, columnspan=4, sticky='nsew')
+        self.scroll = tkinter.Scrollbar(master, orient="vertical", command=self.status_window.yview)
+        self.scroll.grid(row=3, column=4, sticky='nse')
+        self.status_window.configure(state='normal')
+        self.status_window.configure(yscrollcommand=self.scroll.set)
+        self.status_window.see("end")
+        self.status_window.configure(state='disabled')
+
         self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
 
         self.thread = None  # thread to asynchronously read data from the log file
@@ -221,7 +230,14 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
+        for message in action_result.status_messages:
+            self.display_status_message(message)
 
+    def display_status_message(self, msg):
+        self.status_window.configure(state='normal')
+        self.status_window.insert(tkinter.END, msg +"\n")
+        self.status_window.see("end")
+        self.status_window.configure(state='disabled')
 
 class DetailsWindow:
     def __init__(self, master, auction):

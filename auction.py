@@ -67,7 +67,9 @@ class AuctionState:
             bids = ', '.join(action['bids'])
             result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Concluded',
                                           winner=winners, price=bids))
-
+        elif action['action'] == 'FAILED_BID':
+            line = action['data']
+            result.status_messages.append(f'Failed to parse bid: {line}')
         return result
 
     def archive_current_auction(self, item):
@@ -156,6 +158,7 @@ class ActionResult:
             self.update_rows = update_rows
         else:
             self.update_rows = []
+        self.status_messages = []
 
 
 class Row:

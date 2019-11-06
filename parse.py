@@ -133,8 +133,10 @@ class LogLine:
 
 def pre_filter(raw_line):
     """pre-filter lines. if it's not a tell or raid say, we know we don't care"""
-    return re.match("^.{27}[A-Z][a-z]* ((tells the|tell your) raid|tells you|->)", raw_line)
+    return re.match("^.{27}[A-Z][a-z]* (tells the|tell your) raid", raw_line) or tell_filter(raw_line)
 
+def tell_filter(raw_line):
+    return re.match("^.{27}[A-Z][a-z]* (tells you|->)", raw_line)
 
 def handle_line(raw_line, active_items):
     """ returns a description of the action to be taken based on the line, if we
@@ -153,5 +155,7 @@ def handle_line(raw_line, active_items):
         return auction_cancel(line)
     if auction_award_match(line):
         return auction_award(line)
+    if len(active_items) > 0 and tell_filter(raw_line):
+        return {'action': 'FAILED_BID', 'data':line.contents, 'timestamp': line.timestamp()}
     return None
 
