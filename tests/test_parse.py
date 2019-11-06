@@ -35,11 +35,23 @@ BID_TELL_WINDOW = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel 
 BID_TELL_WINDOW_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 "
 BID_TELL_WINDOW_3 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate  55"
 BID_TELL_WINDOW_4 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55"
+BID_TELL_WINDOW_NO_SPACE = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate55"
 BID_TELL_WINDOW_COMMENT = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55 || I can't even use it lol"
 BID_TELL_WINDOW_DKP = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff:  Singing Steel Breastplate 55dkp "
 BID_TELL_WINDOW_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 alt"
 BID_TELL_WINDOW_ALT_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 ALT"
 BID_TELL_WINDOW_ALT_3 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 box"
+
+BID_TELL = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55'"
+BID_TELL_2 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 '"
+BID_TELL_3 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate  55'"
+BID_TELL_4 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, ' Singing Steel Breastplate 55'"
+BID_TELL_NO_SPACE = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate55"
+BID_TELL_COMMENT = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 || I can\'t even use it lol'"
+BID_TELL_DKP = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55dkp '"
+BID_TELL_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 alt'"
+BID_TELL_ALT_2 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 ALT'"
+BID_TELL_ALT_3 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 box'"
 
 BIDS_CLOSED = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate'"
 BIDS_CLOSED_WITH_ONE_WHITESPACE_AFTER = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate '"
@@ -73,16 +85,39 @@ def test_auction_open(comment, bids_open_message):
       ('alt', BID_TELL_WINDOW_ALT_1),
       ('alt', BID_TELL_WINDOW_ALT_2),
       ('box', BID_TELL_WINDOW_ALT_3),
+      ('no space before bid', BID_TELL_WINDOW_NO_SPACE),
       ]
 )
 def test_auction_bid_tell_window(comment, bid_message):
     input_line = parse.LogLine(bid_message)
     result = parse.auction_bid(input_line)
+    assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
     assert result['action'] == 'BID'
 
+@pytest.mark.parametrize('comment, bid_message',
+     [('regular message', BID_TELL),
+      ('whitespace', BID_TELL_2),
+      ('whitespace', BID_TELL_3),
+      ('whitespace', BID_TELL_4),
+      ('comment', BID_TELL_COMMENT),
+      ('has "dkp" in it', BID_TELL_DKP),
+      ('alt', BID_TELL_ALT_1),
+      ('alt', BID_TELL_ALT_2),
+      ('box', BID_TELL_ALT_3),
+      ('no space before bid', BID_TELL_NO_SPACE),
+      ]
+)
+def test_auction_bid_tell(comment, bid_message):
+    input_line = parse.LogLine(bid_message)
+    result = parse.auction_bid(input_line)
+    assert result is not None
+    assert result['item_name'] == 'Singing Steel Breastplate'
+    assert result['player_name'] == 'Playertwo'
+    assert result['value'] == 55
+    assert result['action'] == 'BID'
 
 @pytest.mark.parametrize('comment, bid_message, expect_alt',
                          [('regular message', BID_TELL_WINDOW, False),

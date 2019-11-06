@@ -2,9 +2,9 @@ import re
 import datetime as dt
 
 
-COMMAND_RE = "You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>.*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
-AUCTION_START_RE = COMMAND_RE.format('bids\s*open')
-AUCTION_CLOSE_RE = COMMAND_RE.format('bids\s*closed')
+COMMAND_RE = r"You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>.*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
+AUCTION_START_RE = COMMAND_RE.format(r'bids\s*open')
+AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
 
 
@@ -31,12 +31,12 @@ def auction_start(line):
     return None
 
 
-BID_TELL_WINDOW_RE = ('(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
-                      '(?P<item>.+)\s+(?P<bid>[0-9]+)\s*'
-                      '(dkp)?\s*(?P<alt>alt|box)?\s*(?P<comment>\|\|.*)?$')
-BID_TELL_RE = ("(?P<bidder>[A-Z][a-z]+) tells you, "
-               "'\s*(?P<item>.+) (?P<bid>[0-9]+)\s*(dkp)?\s*"
-               "(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
+BID_TELL_WINDOW_RE = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
+                      r'(?P<item>.+)\s+(?P<bid>[0-9]+)\s*'
+                      r'(dkp)?\s*(?P<alt>alt|box)?\s*(?P<comment>\|\|.*)?$')
+BID_TELL_RE = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
+               r"'\s*(?P<item>.+)\s+(?P<bid>[0-9]+)\s*(dkp)?\s*"
+               r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
 def auction_bid_match(line):
     return re.match(BID_TELL_WINDOW_RE, line.contents, re.IGNORECASE) \
            or re.match(BID_TELL_RE, line.contents, re.IGNORECASE)
@@ -99,13 +99,13 @@ def auction_cancel(line):
     return None
 
 AUCTION_AWARD_RE = ("You tell your raid, "
-                    "'\s*!correction\s*!award\s*"
-                    "(?P<item>.*?)\s+"
-                    "(?P<name>[A-Z][a-z]+)\s+"
-                    "(?P<value>[0-9]+)\s+"
-                    "(?P<comment>\|\|.*)?'$")
+                    r"'\s*!correction\s*!award\s*"
+                    r"(?P<item>.*?)\s+"
+                    r"(?P<name>[A-Z][a-z]+)\s+"
+                    r"(?P<value>[0-9]+)\s+"
+                    r"(?P<comment>\|\|.*)?'$")
 
-AUCTION_AWARD_RE = "You tell your raid, '\s*!correction\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
+AUCTION_AWARD_RE = r"You tell your raid, '\s*!correction\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
 
 
 def auction_award_match(line):
