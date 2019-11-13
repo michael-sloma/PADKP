@@ -1,6 +1,7 @@
 import tkinter
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import simpledialog
 from tkinter import messagebox
 import asyncio
 import threading
@@ -56,6 +57,8 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
+        self.api_token = None
+
         menu = tkinter.Menu(self.frame, tearoff=0)
         menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
         menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
@@ -93,7 +96,9 @@ class MainPage:
             sys.exit()
 
     def open_award_dkp_window(self):
-        AwardDkpWindow(self.master)
+        if self.api_token is None:
+            self.ask_api_token()
+        AwardDkpWindow(self.master, self.api_token)
 
     def open_details_window(self):
         iid = self.tree.focus()
@@ -130,6 +135,8 @@ class MainPage:
         self.master.clipboard_append(report)
 
     def charge_dkp(self):
+        if self.api_token is None:
+            self.ask_api_token()
         selected = self.tree.selection()
 
         charges = []
@@ -150,7 +157,8 @@ class MainPage:
                                     'item_name': item,
                                     'value': cost,
                                     'time': time,
-                                    'notes': ''})
+                                    'notes': '',
+                                    'token': self.api_token})
         charges_human_readable = ['{} to {} for {}'.format(x['item_name'], x['character'], x['value'])
                                   for x in charges]
         confirm = messagebox.askyesno('', '\n'.join(charges_human_readable) + "\n\nCharge DKP?")
@@ -222,6 +230,10 @@ class MainPage:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
 
+    def ask_api_token(self):
+        token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)')
+        self.api_token = token.strip()
+
 
 class DetailsWindow:
     def __init__(self, master, auction):
@@ -247,7 +259,7 @@ class DetailsWindow:
 
 
 class AwardDkpWindow:
-    def __init__(self, master):
+    def __init__(self, master, api_token):
         self.filename = filedialog.askopenfilename()
         short_filename = os.path.split(self.filename)[-1]
 
@@ -277,6 +289,8 @@ class AwardDkpWindow:
         self.award_button.grid(row=4, column=0)
         self.close_button.grid(row=5, column=0)
 
+        self.api_token = api_token
+
     def award_dkp(self):
         try:
             value = int(self.value_entry.get())
@@ -296,7 +310,8 @@ class AwardDkpWindow:
             result = api_client.award_dkp_from_dump(self.filename,
                                                     type,
                                                     value,
-                                                    self.notes_entry.get()
+                                                    self.notes_entry.get(),
+                                                    self.api_token
                                                     )
         except ValueError:
             messagebox.showerror("", "Action Failed, no DKP awarded")
