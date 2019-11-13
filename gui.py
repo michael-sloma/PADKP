@@ -229,6 +229,16 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
+            if update_row.status == 'Concluded':
+                vals = self.tree.item(update_row.iid)['values']
+                message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+                self.master.clipboard_clear()
+                self.master.clipboard_append(message)
+            elif update_row.status == 'Tied':
+                message = '/rs {} tied, hold a moment'.format(vals[3])
+                self.master.clipboard_clear()
+                self.master.clipboard_append(message)
+
 
     def ask_api_token(self):
         token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)')
