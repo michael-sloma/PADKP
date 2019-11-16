@@ -20,11 +20,12 @@ def charge_dkp(character, item_name, value, time, notes, token):
     return requests.post('http://{}/api/purchases/'.format(API_ROOT), json=request, headers=get_headers(token))
 
 
-def award_dkp(characters, reason, value, time, notes, token):
+def award_dkp(characters, reason, value, attendance_value, time, notes, token):
     request = {'items': [{"character": character,
                           "time": str(time),
                           "award_type": reason,
                           "value": value,
+                          "attendance_value": attendance_value,
                           "notes": notes}
                          for character in characters]
                }
@@ -50,13 +51,13 @@ def parse_dump(dumpfile):
     return characters
 
 
-def award_dkp_from_dump(filepath, type, value, notes, token):
+def award_dkp_from_dump(filepath, type, value, attendance_value, notes, token):
     with open(filepath) as f:
         characters = parse_dump(f.readlines())
     create_characters_if_needed(characters, token)
     filename = os.path.split(filepath)[-1]
     time = dt.datetime.strptime(filename, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
-    result = award_dkp(characters, type, value, time, notes, token=token)
+    result = award_dkp(characters, type, value, attendance_value, time, notes, token=token)
     return result
 
 
