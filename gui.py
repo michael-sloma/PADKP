@@ -155,6 +155,8 @@ class MainPage:
             vals = row['values']
             if vals[2] != 'Concluded':
                 continue
+            if vals[4] == '':
+                continue
             item = vals[0]
             winners = [x.strip() for x in vals[3].split(',')]
             costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
@@ -238,8 +240,8 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
+            vals = self.tree.item(update_row.iid)['values']
             if update_row.status == 'Concluded':
-                vals = self.tree.item(update_row.iid)['values']
                 message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
                 self.master.clipboard_clear()
                 self.master.clipboard_append(message)
