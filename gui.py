@@ -306,23 +306,19 @@ class AwardDkpWindow:
             messagebox.showerror("", "DKP must be a number")
             return
 
-        try:
-            type = {'Time': 'TA',
-                    'Boss Kill': 'BK',
-                    'Other': '?'}[self.type_choice.get()]
-        except KeyError:
+        if not self.type_choice.get():
             messagebox.showerror("", "Must choose time, boss kill, or other")
             return
-
         try:
             result = api_client.award_dkp_from_dump(self.filename,
-                                                    type,
+                                                    self.type_choice.get(),
                                                     value,
                                                     self.attendance_var.get(),
                                                     self.notes_entry.get(),
                                                     self.api_token
                                                     )
-        except ValueError:
+            print(result)
+        except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
         if result.status_code == 201:
