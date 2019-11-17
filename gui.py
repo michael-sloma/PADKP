@@ -174,13 +174,15 @@ class MainPage:
                                   for x in charges]
         confirm = messagebox.askyesno('', '\n'.join(charges_human_readable) + "\n\nCharge DKP?")
         if confirm:
-            for charge in charges:
+            for charge, msg in zip(charges, charges_human_readable):
                 result = api_client.charge_dkp(**charge)
-                if result.status_code != 201:
+                if result.status_code == 201:
+                    messagebox.showinfo("", "Charged {}".format(msg))
+                else:
                     err_msg = '{} could not be charged to {}\nSend Quaff a bug report\n\n{}'\
                         .format(charge['item_name'], charge['character'], result.text)
                     messagebox.showerror('Failed to charge', err_msg)
-                print(result.status_code)
+                print('charge completed with status code {}'.format(result.status_code))
 
     def write_report(self):
         filename = filedialog.asksaveasfilename()
@@ -307,15 +309,21 @@ class AwardDkpWindow:
         self.value_label.grid(row=2, column=0, sticky=tkinter.W)
         self.value_entry.grid(row=2, column=1, sticky=tkinter.W)
 
+        self.attendance_var = tkinter.IntVar(value=1)
+        self.attendance_label = tkinter.Label(self.window, text="Counts for attendance?")
+        self.attendance_entry = tkinter.Checkbutton(self.window, variable=self.attendance_var)
+        self.attendance_label.grid(row=3, column=0, sticky=tkinter.W)
+        self.attendance_entry.grid(row=3, column=1, sticky=tkinter.W)
+
         self.notes_label = tkinter.Label(self.window, text="Notes")
         self.notes_entry = tkinter.Entry(self.window)
-        self.notes_label.grid(row=3, column=0, sticky=tkinter.W)
-        self.notes_entry.grid(row=3, column=1, sticky=tkinter.W)
+        self.notes_label.grid(row=4, column=0, sticky=tkinter.W)
+        self.notes_entry.grid(row=4, column=1, sticky=tkinter.W)
 
         self.award_button = tkinter.Button(self.window, text="Award DKP", command=self.award_dkp)
         self.close_button = tkinter.Button(self.window, text="Cancel", command=self.window.destroy)
-        self.award_button.grid(row=4, column=0)
-        self.close_button.grid(row=5, column=0)
+        self.award_button.grid(row=5, column=0)
+        self.close_button.grid(row=6, column=0)
 
         self.api_token = api_token
 
@@ -326,22 +334,19 @@ class AwardDkpWindow:
             messagebox.showerror("", "DKP must be a number")
             return
 
-        try:
-            type = {'Time': 'TA',
-                    'Boss Kill': 'BK',
-                    'Other': '?'}[self.type_choice.get()]
-        except KeyError:
+        if not self.type_choice.get():
             messagebox.showerror("", "Must choose time, boss kill, or other")
             return
-
         try:
             result = api_client.award_dkp_from_dump(self.filename,
-                                                    type,
+                                                    self.type_choice.get(),
                                                     value,
+                                                    self.attendance_var.get(),
                                                     self.notes_entry.get(),
                                                     self.api_token
                                                     )
-        except ValueError:
+            print(result)
+        except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
         if result.status_code == 201:
