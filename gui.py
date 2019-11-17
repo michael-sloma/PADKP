@@ -50,6 +50,15 @@ class MainPage:
         self.button = tkinter.Button(master, text="Close (Ctrl-Q)", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
 
+        self.status_window = tkinter.Text(master, height= 10, wrap="word")
+        self.status_window.grid(row=3, columnspan=4, sticky='nsew')
+        self.scroll = tkinter.Scrollbar(master, orient="vertical", command=self.status_window.yview)
+        self.scroll.grid(row=3, column=4, sticky='nse')
+        self.status_window.configure(state='normal')
+        self.status_window.configure(yscrollcommand=self.scroll.set)
+        self.status_window.see("end")
+        self.status_window.configure(state='disabled')
+
         self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
 
         self.thread = None  # thread to asynchronously read data from the log file
@@ -231,11 +240,28 @@ class MainPage:
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
                                                    update_row.price))
+            if update_row.status == 'Concluded':
+                vals = self.tree.item(update_row.iid)['values']
+                message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+                self.master.clipboard_clear()
+                self.master.clipboard_append(message)
+            elif update_row.status == 'Tied':
+                message = '/rs {} tied, hold a moment'.format(vals[3])
+                self.master.clipboard_clear()
+                self.master.clipboard_append(message)
+                
+        for message in action_result.status_messages:
+            self.display_status_message(message)
 
     def ask_api_token(self):
         token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)')
         self.api_token = token.strip()
 
+    def display_status_message(self, msg):
+        self.status_window.configure(state='normal')
+        self.status_window.insert(tkinter.END, msg +"\n")
+        self.status_window.see("end")
+        self.status_window.configure(state='disabled')
 
 class DetailsWindow:
     def __init__(self, master, auction):
@@ -337,6 +363,7 @@ class AsyncioThread(threading.Thread):
         self.queue = queue
         self.max_data = max_data
         self.file_obj = file_obj
+        self.active_items = set()
         threading.Thread.__init__(self)
 
     def stop(self):
@@ -356,10 +383,14 @@ class AsyncioThread(threading.Thread):
                 await asyncio.sleep(1)
             else:
                 try:
-                    action = parse.handle_line(line)
+                    action = parse.handle_line(line, self.active_items)
                     if action is not None:
                         print('enqueued a line', line)
                         self.queue.put(('', action))
+                        if action['action'] == 'AUCTION_START':
+                            self.active_items.add(action['item_name'])
+                        if action['action'] == 'AUCTION_CLOSE' or action['action'] == 'AUCTION_CANCEL':
+                            self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')
                     print('LINE', line)
