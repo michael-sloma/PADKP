@@ -131,6 +131,8 @@ class MainPage:
         self.config = config.load_saved_config()
         self.api_token_asked = False
         self.api_token = self.config.get('api_token', None)
+        if 'log_file' in self.config and os.path.exists(self.config['log_file']):
+            self.open_log_file(self.config['log_file'])
         print("LOADED")
 
     def confirm_quit(self):
@@ -151,12 +153,14 @@ class MainPage:
         auction = self.state.get_auction_by_iid(iid)
         DetailsWindow(self.master, auction)
 
-    def open_log_file(self):
+    def open_log_file(self, filename=None):
         self.clear_data()
-        filename = filedialog.askopenfilename()
+        if filename is None:
+            filename = filedialog.askopenfilename()
         if filename:
             f = open(filename)
             self.load_data_from_log_file(f)
+            self.config['log_file'] = filename
 
     def copy_grats_message(self):
         iid = self.tree.focus()
