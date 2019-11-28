@@ -105,33 +105,24 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
-        def popup(event):
+        def auction_context_menu_popup(event):
             self.tree.focus()
-            menu.post(event.x_root, event.y_root)
+            auction_context_menu.post(event.x_root, event.y_root)
+        self.tree.bind("<Control-Button-1>", auction_context_menu_popup)
+        self.tree.bind("<Button-3>", auction_context_menu_popup)
+        auction_context_menu = tkinter.Menu(self.frame, tearoff=0)
+        auction_context_menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        auction_context_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        auction_context_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        auction_context_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
 
-        self.tree.bind("<Control-Button-1>", popup)
-        self.tree.bind("<Button-3>", popup)
-
-        menu = tkinter.Menu(self.frame, tearoff=0)
-        menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
-        menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
-        menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
-
-        menu_2 = tkinter.Menu(self.frame, tearoff=0)
-        menu_2.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
-        def popup_2(event):
+        def raid_dump_context_menu_popup(event):
             self.raid_dump_pane.focus()
-            menu_2.post(event.x_root, event.y_root)
-        self.raid_dump_pane.bind("<Control-Button-1>", popup_2)
-        self.raid_dump_pane.bind("<Button-3>", popup_2)
-
-        menu = tkinter.Menu(self.frame, tearoff=0)
-        menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
-        menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
-        menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
-
+            raid_dump_context_menu.post(event.x_root, event.y_root)
+        self.raid_dump_pane.bind("<Control-Button-1>", raid_dump_context_menu_popup)
+        self.raid_dump_pane.bind("<Button-3>", raid_dump_context_menu_popup)
+        raid_dump_context_menu = tkinter.Menu(self.frame, tearoff=0)
+        raid_dump_context_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
 
         # add keyboard shortcuts
         self.master.bind("<Control-f>", lambda _: self.open_log_file())
