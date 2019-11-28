@@ -14,12 +14,45 @@ import os
 import api_client
 import parse
 import auction
+import config
+
+
+def prompt_api_token(f):
+    def with_check_api_token(self, *args, **kwargs):
+        if self.api_token is None or not self.api_token_asked:
+            self.ask_api_token()
+            if self.api_token:
+                self.api_token_asked = True
+        return f(self, *args, **kwargs)
+    return with_check_api_token
 
 
 class MainPage:
     def __init__(self, master):
         self.master = master
         self.frame = tkinter.Frame(self.master)
+
+        menu_bar = tkinter.Menu(master)
+        file_menu = tkinter.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="Open log file (Ctrl-F)", command=self.open_log_file)
+        file_menu.add_command(label="Enter API token (Ctrl-T)", command=self.ask_api_token)
+        file_menu.add_command(label="Close (Ctrl-Q)", command=self.confirm_quit)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+
+        auction_menu = tkinter.Menu(menu_bar, tearoff=0)
+        auction_menu.add_command(label="See auction details (Ctrl-D)", command=self.open_details_window)
+        auction_menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        auction_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        auction_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        auction_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+        menu_bar.add_cascade(label="Auctions", menu=auction_menu)
+
+        dkp_menu = tkinter.Menu(menu_bar, tearoff=0)
+        dkp_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        menu_bar.add_cascade(label="Awards", menu=dkp_menu)
+
+
+        master.config(menu=menu_bar)
 
         columns = ['item', 'item_count', 'status', 'winner', 'price']
         self.tree = ttk.Treeview(self.master, columns=columns)
@@ -66,7 +99,6 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
-        self.api_token = None
 
         menu = tkinter.Menu(self.frame, tearoff=0)
         menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
@@ -92,21 +124,26 @@ class MainPage:
         self.tree.bind("<Control-d>", lambda _: self.open_details_window())
         self.tree.bind("<Control-b>", lambda _: self.charge_dkp())
         self.tree.bind("<Control-w>", lambda _: self.open_award_dkp_window())
+        self.tree.bind("<Control-t>", lambda _: self.ask_api_token())
 
         self.master.after(1, self.tree.focus_force)
+
+        self.config = config.load_saved_config()
+        self.api_token_asked = False
+        self.api_token = self.config.get('api_token', None)
         print("LOADED")
 
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
         if confirm:
+            config.write_config(self.config)
             if self.thread is not None:
                 self.thread.stop()
             self.master.destroy()
             sys.exit()
 
+    @prompt_api_token
     def open_award_dkp_window(self):
-        if self.api_token is None:
-            self.ask_api_token()
         AwardDkpWindow(self.master, self.api_token)
 
     def open_details_window(self):
@@ -143,9 +180,8 @@ class MainPage:
         self.master.clipboard_clear()
         self.master.clipboard_append(report)
 
+    @prompt_api_token
     def charge_dkp(self):
-        if self.api_token is None:
-            self.ask_api_token()
         selected = self.tree.selection()
 
         charges = []
@@ -256,14 +292,18 @@ class MainPage:
             self.display_status_message(message)
 
     def ask_api_token(self):
-        token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)')
+        initial_value = self.api_token if self.api_token is not None else ''
+        token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)',
+                                       initialvalue=initial_value)
         self.api_token = token.strip()
+        self.config['api_token'] = self.api_token
 
     def display_status_message(self, msg):
         self.status_window.configure(state='normal')
         self.status_window.insert(tkinter.END, msg +"\n")
         self.status_window.see("end")
         self.status_window.configure(state='disabled')
+
 
 class DetailsWindow:
     def __init__(self, master, auction):
@@ -410,4 +450,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
