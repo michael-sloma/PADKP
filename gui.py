@@ -35,6 +35,7 @@ class MainPage:
         menu_bar = tkinter.Menu(master)
         file_menu = tkinter.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Open log file (Ctrl-F)", command=self.open_log_file)
+        file_menu.add_command(label="Choose raid dump directory (Ctrl-R)", command=self.choose_raid_dump_dir)
         file_menu.add_command(label="Enter API token (Ctrl-T)", command=self.ask_api_token)
         file_menu.add_command(label="Close (Ctrl-Q)", command=self.confirm_quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
@@ -50,7 +51,6 @@ class MainPage:
         dkp_menu = tkinter.Menu(menu_bar, tearoff=0)
         dkp_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
         menu_bar.add_cascade(label="Awards", menu=dkp_menu)
-
 
         master.config(menu=menu_bar)
 
@@ -68,7 +68,7 @@ class MainPage:
         self.tree.column('#3', stretch=tkinter.YES)
         self.tree.column('#4', stretch=tkinter.YES)
         self.tree.column('#5', stretch=tkinter.YES)
-        self.tree.grid(row=1, columnspan=4, sticky='nsew')
+        self.tree.grid(row=1, columnspan=4, sticky='nsw')
 
         self.button = tkinter.Button(master, text="Load log file (Ctrl-F)", command=self.open_log_file)
         self.button.grid(row=2, column=0)
@@ -84,13 +84,19 @@ class MainPage:
         self.button.grid(row=2, column=3)
 
         self.status_window = tkinter.Text(master, height= 10, wrap="word")
-        self.status_window.grid(row=3, columnspan=4, sticky='nsew')
+        self.status_window.grid(row=4, columnspan=4, sticky='nsew')
         self.scroll = tkinter.Scrollbar(master, orient="vertical", command=self.status_window.yview)
-        self.scroll.grid(row=3, column=4, sticky='nse')
+        self.scroll.grid(row=4, column=4, sticky='nse')
         self.status_window.configure(state='normal')
         self.status_window.configure(yscrollcommand=self.scroll.set)
         self.status_window.see("end")
         self.status_window.configure(state='disabled')
+
+        self.raid_dump_pane = ttk.Treeview(master, columns=['time'], selectmode='browse')
+        self.raid_dump_pane.grid(row=3, column=0, columnspan=4, sticky='ew')
+        self.raid_dump_pane.heading('#0', text='dump')
+        self.raid_dump_pane.heading('#1', text='time')
+        self.raid_dump_files = set()
 
         self.master.protocol("WM_DELETE_WINDOW", self.confirm_quit)
 
@@ -99,6 +105,12 @@ class MainPage:
         self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
         self.state = auction.AuctionState()
 
+        def popup(event):
+            self.tree.focus()
+            menu.post(event.x_root, event.y_root)
+
+        self.tree.bind("<Control-Button-1>", popup)
+        self.tree.bind("<Button-3>", popup)
 
         menu = tkinter.Menu(self.frame, tearoff=0)
         menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
@@ -106,25 +118,32 @@ class MainPage:
         menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
         menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
 
-        def popup(event):
-            print("popup was called")
-            self.tree.focus()
-            menu.post(event.x_root, event.y_root)
+        menu_2 = tkinter.Menu(self.frame, tearoff=0)
+        menu_2.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        def popup_2(event):
+            self.raid_dump_pane.focus()
+            menu_2.post(event.x_root, event.y_root)
+        self.raid_dump_pane.bind("<Control-Button-1>", popup_2)
+        self.raid_dump_pane.bind("<Button-3>", popup_2)
 
-        # attach popup to canvas
-        self.tree.bind("<Control-Button-1>", popup)
-        self.tree.bind("<Button-3>", popup)
+        menu = tkinter.Menu(self.frame, tearoff=0)
+        menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+
 
         # add keyboard shortcuts
-        self.tree.bind("<Control-f>", lambda _: self.open_log_file())
-        self.tree.bind("<Control-c>", lambda _: self.copy_report_from_selection())
-        self.tree.bind("<Control-C>", lambda _: self.copy_report())
-        self.tree.bind("<Control-g>", lambda _: self.copy_grats_message())
-        self.tree.bind("<Control-q>", lambda _: self.confirm_quit())
-        self.tree.bind("<Control-d>", lambda _: self.open_details_window())
-        self.tree.bind("<Control-b>", lambda _: self.charge_dkp())
-        self.tree.bind("<Control-w>", lambda _: self.open_award_dkp_window())
-        self.tree.bind("<Control-t>", lambda _: self.ask_api_token())
+        self.master.bind("<Control-f>", lambda _: self.open_log_file())
+        self.master.bind("<Control-c>", lambda _: self.copy_report_from_selection())
+        self.master.bind("<Control-C>", lambda _: self.copy_report())
+        self.master.bind("<Control-g>", lambda _: self.copy_grats_message())
+        self.master.bind("<Control-q>", lambda _: self.confirm_quit())
+        self.master.bind("<Control-d>", lambda _: self.open_details_window())
+        self.master.bind("<Control-b>", lambda _: self.charge_dkp())
+        self.master.bind("<Control-w>", lambda _: self.open_award_dkp_window())
+        self.master.bind("<Control-t>", lambda _: self.ask_api_token())
+        self.master.bind("<Control-r>", lambda _: self.choose_raid_dump_dir())
 
         self.master.after(1, self.tree.focus_force)
 
@@ -133,7 +152,30 @@ class MainPage:
         self.api_token = self.config.get('api_token', None)
         if 'log_file' in self.config and os.path.exists(self.config['log_file']):
             self.open_log_file(self.config['log_file'])
+
+        if 'dump_path' in self.config and os.path.exists(self.config['dump_path']):
+            self.show_raid_dumps()
         print("LOADED")
+
+    def choose_raid_dump_dir(self, path=None):
+        if path is None:
+            path = filedialog.askdirectory()
+        if path:
+            self.config['dump_path'] = path
+        self.show_raid_dumps()
+
+    def show_raid_dumps(self):
+        path = self.config.get('dump_path')
+        if not os.path.exists(path):
+            return
+        raid_dump_files = sorted([x for x in os.listdir(path) if x.startswith('RaidRoster')], reverse=True)
+        for rdf in raid_dump_files:
+            if rdf not in self.raid_dump_files:
+                time = dt.datetime.strptime(rdf, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
+                display_time = time.strftime('%b %e, %l:%M %p')
+                self.raid_dump_pane.insert('', tkinter.END, text=rdf, values=[display_time])
+                self.raid_dump_files.add(rdf)
+        self.master.after(1000, self.show_raid_dumps)
 
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
@@ -146,7 +188,8 @@ class MainPage:
 
     @prompt_api_token
     def open_award_dkp_window(self):
-        AwardDkpWindow(self.master, self.api_token)
+        filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
+        AwardDkpWindow(self.master, self.api_token, self.config.get('dump_path'), filename)
 
     def open_details_window(self):
         iid = self.tree.focus()
@@ -333,8 +376,11 @@ class DetailsWindow:
 
 
 class AwardDkpWindow:
-    def __init__(self, master, api_token):
-        self.filename = filedialog.askopenfilename()
+    def __init__(self, master, api_token, path, filename):
+        if filename:
+            self.filename = os.path.join(path, filename)
+        else:
+            self.filename = filedialog.askopenfilename()
         short_filename = os.path.split(self.filename)[-1]
 
         self.window = tkinter.Toplevel(master)
