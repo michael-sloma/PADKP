@@ -5,9 +5,11 @@ MAIN_BEATS_ALTS_BID = 10
 
 
 class AuctionState:
-    def __init__(self):
+    def __init__(self, my_name=''):
         self.active_auctions = {}
+        self.preregistered_bids = {}
         self.concluded_auctions = []
+        self.my_name = my_name
 
     def update(self, action):
         # before we do anything else, we check if any auctions need to be expired
@@ -29,7 +31,15 @@ class AuctionState:
                 return result
             iid = str(uuid.uuid1())
             self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}, 'time': timestamp,
-                                          'item_count':item_count}
+                                          'item_count': item_count}
+
+            # if we've pre-registered a bid for this item, add it to the auction now
+            if item in self.preregistered_bids:
+                pre_bid = self.preregistered_bids[item]
+                bid = {'value': pre_bid['value'], 'comment': pre_bid['comment'], 'alt': pre_bid['alt']}
+                self.active_auctions[item]['bids'][self.my_name] = bid
+                del self.preregistered_bids[item]
+
             result.add_rows.append(Row(iid=iid, timestamp=timestamp, item=item, item_count=item_count, status='Open'))
 
         elif action['action'] == 'BID':
@@ -67,10 +77,17 @@ class AuctionState:
             bids = ', '.join(action['bids'])
             result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Concluded',
                                           winner=winners, price=bids))
+
         elif action['action'] == 'FAILED_BID':
             line = action['data']
             result.status_messages.append(f'Failed to parse bid: {line}')
+
+        elif action['action'] == 'PREREGISTER':
+            print('got a prereg', action)
+            self.preregistered_bids[action['item_name']] = action
+
         return result
+
 
     def archive_current_auction(self, item):
         self.concluded_auctions.append(self.active_auctions[item])

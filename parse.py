@@ -1,4 +1,5 @@
 import re
+import os
 import datetime as dt
 
 
@@ -120,6 +121,31 @@ def auction_award(line):
                 'timestamp': line.timestamp()}
     return None
 
+PREREGISTER_RE = (r"You told (?P<recipient>[A-Z][a-z]+), "
+                  r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
+                  r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
+
+
+def preregister_match(line):
+    return re.match(PREREGISTER_RE, line.contents, re.IGNORECASE)
+
+
+def preregister(line):
+    search = re.search(PREREGISTER_RE, line.contents, re.IGNORECASE)
+    if search:
+        recipient = search.group('recipient')
+        item_name = search.group('item')
+        value = search.group('bid')
+        alt = search.group('alt')
+        comment = search.group('comment')
+        return {'action': 'PREREGISTER',
+                'item_name': item_name.strip(),
+                'recipient': recipient,
+                'value': int(value),
+                'comment': comment[2:] if comment is not None else '',
+                'alt': alt is not None,
+                'timestamp': line.timestamp()}
+    return None
 
 
 class LogLine:
@@ -135,8 +161,18 @@ def pre_filter(raw_line):
     """pre-filter lines. if it's not a tell or raid say, we know we don't care"""
     return re.match("^.{27}[A-Z][a-z]* (tells the|tell your) raid", raw_line) or tell_filter(raw_line)
 
-def tell_filter(raw_line):
+
+def received_tell_filter(raw_line):
     return re.match("^.{27}[A-Z][a-z]* (tells you|->)", raw_line)
+
+
+def sent_tell_filter(raw_line):
+    return re.match("^.{27}You told", raw_line)
+
+
+def tell_filter(raw_line):
+    return received_tell_filter(raw_line) or sent_tell_filter(raw_line)
+
 
 def handle_line(raw_line, active_items):
     """ returns a description of the action to be taken based on the line, if we
@@ -155,7 +191,18 @@ def handle_line(raw_line, active_items):
         return auction_cancel(line)
     if auction_award_match(line):
         return auction_award(line)
-    if len(active_items) > 0 and tell_filter(raw_line):
-        return {'action': 'FAILED_BID', 'data':line.contents, 'timestamp': line.timestamp()}
+    if preregister_match(line):
+        return preregister(line)
+    if len(active_items) > 0 and received_tell_filter(raw_line):
+        return {'action': 'FAILED_BID', 'data': line.contents, 'timestamp': line.timestamp()}
     return None
+
+
+def get_name_from_log_file_path(filepath):
+    short_filename = os.path.split(filepath)[-1]
+    name_search = re.search(r'eqlog_(?P<my_name>.*)_.*.txt', short_filename)
+    if name_search:
+        return name_search.group('my_name')
+    else:
+        return 'MYSELF'
 

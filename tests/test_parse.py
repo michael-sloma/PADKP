@@ -59,6 +59,7 @@ BIDS_CLOSED_WITH_TWO_WHITESPACE_AFTER = "[Wed Jun 12 23:24:33 2019] You tell you
 BIDS_CLOSED_WITH_WHITESPACE_BEFORE = "[Wed Jun 12 23:24:33 2019] You tell your raid, ' !Bids closed Singing Steel Breastplate'"
 BIDS_CLOSED_WITH_COMMENT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate || tells to Quaff'"
 
+
 FAILED_BID = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'I like apples'"
 
 DEFAULT_ITEMS = set(['Singing Steel Breastplate'])
@@ -194,3 +195,28 @@ def test_auction_award_3():
     result = parse.auction_award(line)
     assert result['winners'] == ['Baz']
     assert result['bids'] == ['30']
+
+
+PREGISTER = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 '"
+PREREGISTER_ALT = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 box'"
+def test_preregister():
+    line = parse.LogLine(PREGISTER)
+    assert parse.preregister_match(line)
+    result = parse.preregister(line)
+    assert result
+    assert result['action'] == 'PREREGISTER'
+    assert result['item_name'] == 'Singing Steel Breastplate'
+    assert result['value'] == 55
+    assert not result['alt']
+
+
+def test_preregister_alt():
+    print(parse.PREREGISTER_RE)
+    line = parse.LogLine(PREREGISTER_ALT)
+    assert parse.preregister_match(line)
+    result = parse.preregister(line)
+    assert result
+    assert result['action'] == 'PREREGISTER'
+    assert result['item_name'] == 'Singing Steel Breastplate'
+    assert result['value'] == 55
+    assert result['alt']

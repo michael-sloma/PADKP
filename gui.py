@@ -10,6 +10,7 @@ import sys
 import traceback
 import datetime as dt
 import os
+import re
 
 import api_client
 import parse
@@ -138,6 +139,7 @@ class MainPage:
 
         self.master.after(1, self.tree.focus_force)
 
+        self.my_name = ''
         self.config = config.load_saved_config()
         self.api_token_asked = False
         self.api_token = self.config.get('api_token', None)
@@ -194,6 +196,7 @@ class MainPage:
         if filename:
             f = open(filename)
             self.load_data_from_log_file(f)
+            self.state.my_name = parse.get_name_from_log_file_path(filename)
             self.config['log_file'] = filename
 
     def copy_grats_message(self):
