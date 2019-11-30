@@ -1,3 +1,18 @@
+1.1.0
+*   Added an additional UI pane that shows raid dumps. DKP can be awarded for
+    these dumps by the "award dkp" button as usual, or by right click->award
+    dkp.
+
+*   Users can now preregister bids by sending a tell like "!preregister Cloak of
+    Flames 50". They are then locked into that bid for the duration of the auction.
+    This allows users to bid in auctions that they are managing.
+
+*   Added a menu bar.
+
+1.0.0
+*   We now integrate with the DKP site at padkp.net. Users can charge DKP for
+    items and award DKP for dumps directly from the desktop app.
+
 0.0.7
 *   Copy grats message should now work as expected when multiple rows are
     selected
