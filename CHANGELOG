@@ -3,11 +3,16 @@
     these dumps by the "award dkp" button as usual, or by right click->award
     dkp.
 
+*   Added a "Quick Award DKP" option that creates a Time award for the standard
+    DKP amount using the selected file.
+
 *   Users can now preregister bids by sending a tell like "!preregister Cloak of
     Flames 50". They are then locked into that bid for the duration of the auction.
     This allows users to bid in auctions that they are managing.
 
 *   Added a menu bar.
+
+*   API tokens and log files locations will now persist from session to session.
 
 1.0.0
 *   We now integrate with the DKP site at padkp.net. Users can charge DKP for

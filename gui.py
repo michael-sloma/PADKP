@@ -124,6 +124,7 @@ class MainPage:
         self.raid_dump_pane.bind("<Button-3>", raid_dump_context_menu_popup)
         raid_dump_context_menu = tkinter.Menu(self.frame, tearoff=0)
         raid_dump_context_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        raid_dump_context_menu.add_command(label="Quick award DKP (Ctrl-Shift-W)", command=self.quick_award_dkp)
 
         # add keyboard shortcuts
         self.master.bind("<Control-f>", lambda _: self.open_log_file())
@@ -134,6 +135,7 @@ class MainPage:
         self.master.bind("<Control-d>", lambda _: self.open_details_window())
         self.master.bind("<Control-b>", lambda _: self.charge_dkp())
         self.master.bind("<Control-w>", lambda _: self.open_award_dkp_window())
+        self.master.bind("<Control-Shift-W>", lambda _: self.quick_award_dkp())
         self.master.bind("<Control-t>", lambda _: self.ask_api_token())
         self.master.bind("<Control-r>", lambda _: self.choose_raid_dump_dir())
 
@@ -151,6 +153,7 @@ class MainPage:
         print("LOADED")
 
     def choose_raid_dump_dir(self, path=None):
+        self.raid_dump_pane.delete(*self.raid_dump_pane.get_children())
         if path is None:
             path = filedialog.askdirectory()
         if path:
@@ -161,7 +164,8 @@ class MainPage:
         path = self.config.get('dump_path')
         if not os.path.exists(path):
             return
-        raid_dump_files = sorted([x for x in os.listdir(path) if x.startswith('RaidRoster')], reverse=True)
+        raid_dump_files = sorted([x for x in os.listdir(path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)],
+                                 reverse=True)
         for rdf in raid_dump_files:
             if rdf not in self.raid_dump_files:
                 time = dt.datetime.strptime(rdf, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
@@ -183,6 +187,29 @@ class MainPage:
     def open_award_dkp_window(self):
         filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
         AwardDkpWindow(self.master, self.api_token, self.config.get('dump_path'), filename)
+
+    @prompt_api_token
+    def quick_award_dkp(self):
+        dkp_value = 1
+        attendance = 1
+        notes = ''
+        award_type = 'Time'
+        selection = self.raid_dump_pane.selection()
+        if not selection:
+            messagebox.showerror("", "Select a raid dump!")
+            return
+
+        short_filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
+        filename = os.path.join(self.config.get('dump_path'), short_filename)
+        try:
+            result = api_client.award_dkp_from_dump(filename, award_type, dkp_value, attendance, notes, self.api_token)
+        except Exception:
+            messagebox.showerror("", "Action Failed, no DKP awarded")
+            raise
+        if result.status_code == 201:
+            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(dkp_value, short_filename))
+        else:
+            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
 
     def open_details_window(self):
         iid = self.tree.focus()
