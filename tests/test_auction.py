@@ -94,3 +94,24 @@ def test_failed_bid_case():
         update = auc.update(action)
     assert update.status_messages[0] == "Failed to parse bid: Bar -> Quaff: I don't understand the rules, help?"
 
+
+def test_preregister_bid():
+    auc = auction.AuctionState()
+    auc.my_name = "Tester"
+    lines = [
+        "[Wed Jun 12 23:24:32 2019] You told Grunt, '!preregister Cloak of Flames 20'",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
+        "[Wed Jun 12 23:07:49 2019] Foobar -> Quaff: Cloak of Flames  10",
+        "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  10",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
+    ]
+    for line in lines:
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        action = parse.handle_line(line, set(['Cloak of Flames']))
+        update = auc.update(action)
+    finished_auction = auc.concluded_auctions[0]
+    assert finished_auction['item'] == 'Cloak of Flames'
+    assert len(finished_auction['bids']) == 3
+    assert update.update_rows[0].winner == 'Tester'
+    assert update.update_rows[0].price == '20'
+
