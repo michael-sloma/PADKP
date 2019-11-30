@@ -475,7 +475,7 @@ class AsyncioThread(threading.Thread):
                         self.queue.put(('', action))
                         if action['action'] == 'AUCTION_START':
                             self.active_items.add(action['item_name'])
-                        if action['action'] == 'AUCTION_CLOSE' or action['action'] == 'AUCTION_CANCEL':
+                        if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD']:
                             self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')

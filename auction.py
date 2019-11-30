@@ -77,10 +77,13 @@ class AuctionState:
             bids = ', '.join(action['bids'])
             result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Concluded',
                                           winner=winners, price=bids))
+            if item in self.active_auctions:
+                del self.active_auctions[item]
 
         elif action['action'] == 'FAILED_BID':
-            line = action['data']
-            result.status_messages.append(f'Failed to parse bid: {line}')
+            if self.active_auctions:
+                line = action['data']
+                result.status_messages.append(f'Failed to parse bid: {line}')
 
         elif action['action'] == 'PREREGISTER':
             print('got a prereg', action)
