@@ -8,6 +8,8 @@ def _get_config_file_path():
         dir = os.path.join(os.environ['APPDATA'], 'PADKP')
     else:
         dir = os.getcwd()
+    if not os.path.exists(dir):
+        os.mkdir(dir)
     return os.path.join(dir, 'PADKP_config.json')
 
 
