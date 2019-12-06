@@ -164,13 +164,12 @@ class MainPage:
         path = self.config.get('dump_path')
         if not os.path.exists(path):
             return
-        raid_dump_files = sorted([x for x in os.listdir(path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)],
-                                 reverse=True)
+        raid_dump_files = sorted([x for x in os.listdir(path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)])
         for rdf in raid_dump_files:
             if rdf not in self.raid_dump_files:
                 time = dt.datetime.strptime(rdf, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
                 display_time = time.strftime('%a %m/%e, %I:%M %p')
-                self.raid_dump_pane.insert('', tkinter.END, text=rdf, values=[display_time])
+                self.raid_dump_pane.insert('', 0, text=rdf, values=[display_time])
                 self.raid_dump_files.add(rdf)
         self.master.after(1000, self.show_raid_dumps)
 
@@ -368,8 +367,8 @@ class MainPage:
 
     def display_status_message(self, msg):
         self.status_window.configure(state='normal')
-        self.status_window.insert(tkinter.END, msg +"\n")
-        self.status_window.see("end")
+        self.status_window.insert('1.0', msg +"\n")
+        #self.status_window.see("end")
         self.status_window.configure(state='disabled')
 
 
