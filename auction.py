@@ -1,7 +1,7 @@
 import uuid
 import datetime as dt
 
-MAIN_BEATS_ALTS_BID = 10
+MAIN_BEATS_ALTS_BID = 11
 
 
 class AuctionState:
