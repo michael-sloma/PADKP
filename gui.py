@@ -15,6 +15,7 @@ import re
 import api_client
 import parse
 import auction
+import timestamps
 import config
 
 
@@ -167,8 +168,7 @@ class MainPage:
         raid_dump_files = sorted([x for x in os.listdir(path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)])
         for rdf in raid_dump_files:
             if rdf not in self.raid_dump_files:
-                time = dt.datetime.strptime(rdf, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
-                display_time = time.strftime('%a %m/%e, %I:%M %p')
+                display_time = timestamps.time_to_gui_display(timestamps.time_from_raid_dump(rdf))
                 self.raid_dump_pane.insert('', 0, text=rdf, values=[display_time])
                 self.raid_dump_files.add(rdf)
         self.master.after(1000, self.show_raid_dumps)
@@ -263,14 +263,14 @@ class MainPage:
             item = vals[0]
             winners = [x.strip() for x in vals[3].split(',')]
             costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
-            time = dt.datetime.strptime(timestamp, '%a, %d %b %Y %H:%M').strftime('%Y-%m-%dT%H:%M:%SZ')
+            time = timestamps.time_from_gui_display(timestamp)
 
             for winner, cost in zip(winners, costs):
                 if winner != 'ROT':
                     charges.append({'character': winner,
                                     'item_name': item,
                                     'value': cost,
-                                    'time': time,
+                                    'time': timestamps.time_to_django_repr(time),
                                     'notes': '',
                                     'token': self.api_token})
         charges_human_readable = ['{} to {} for {}'.format(x['item_name'], x['character'], x['value'])
@@ -340,7 +340,7 @@ class MainPage:
         if action_result is None:
             return
         for new_row in action_result.add_rows:
-            self.tree.insert('', 0, text=new_row.timestamp.strftime('%a, %d %b %Y %H:%M'),
+            self.tree.insert('', 0, text=timestamps.time_to_gui_display(new_row.timestamp),
                              values=(new_row.item, new_row.item_count, new_row.status, new_row.winner, new_row.price), iid=new_row.iid)
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
