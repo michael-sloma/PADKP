@@ -1,5 +1,6 @@
 import datetime as dt
 import requests
+import timestamps
 import os
 
 API_ROOT = 'padkp.net'
@@ -23,12 +24,17 @@ def charge_dkp(character, item_name, value, time, notes, token):
 def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, notes, token):
     filename = os.path.split(filepath)[-1]
     dump_contents = open(filepath).read()
+
+    time = timestamps.time_from_raid_dump(filename)
+    time_s = timestamps.time_to_django_repr(time)
+
     request = {"filename": filename,
-                "dump_contents": dump_contents,
-                "award_type": reason,
-                "value": value,
-                "counts_for_attendance": counts_for_attendance,
-                "notes": notes
+               "dump_contents": dump_contents,
+               "award_type": reason,
+               "value": value,
+               "counts_for_attendance": counts_for_attendance,
+               "time": time_s,
+               "notes": notes
                }
     return requests.post('http://{}/api/upload_dump/'.format(API_ROOT), json=request, headers=get_headers(token))
 
