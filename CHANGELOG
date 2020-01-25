@@ -7,6 +7,8 @@
 
 *   Correct the minimum bid for alts to beat mains (it should be 11, not 10.)
 
+*   Timezones should now be handled correctly when awarding DKP
+
 1.1.0
 *   Added an additional UI pane that shows raid dumps. DKP can be awarded for
     these dumps by the "award dkp" button as usual, or by right click->award
