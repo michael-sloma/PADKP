@@ -8,7 +8,7 @@ times are assumed to always be in the user's system's local time
 """
 import datetime as dt
 
-GUI_DISPLAY_S = '%b %d, %I:%M %p'
+GUI_DISPLAY_S = '%b %d %Y, %I:%M %p'
 
 
 def time_from_raid_dump(string):
