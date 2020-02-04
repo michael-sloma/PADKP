@@ -148,6 +148,27 @@ def preregister(line):
     return None
 
 
+WAITLIST_RE = ("You tell your raid, "
+               r"'\s*!waitlist\s*"
+               r"(?P<command>[a-z]+)\s+"
+               r"(?P<name>[A-Z][a-z]+)")
+
+
+def waitlist_match(line):
+    return re.match(WAITLIST_RE, line.contents, re.IGNORECASE)
+
+
+def waitlist(line):
+    search = re.search(WAITLIST_RE, line.contents, re.IGNORECASE)
+    if search:
+        name = search.group('name')
+        command = 'WAITLIST_' + search.group('command').upper()
+        return {'action': command,
+                'name': name,
+                'timestamp': line.timestamp()}
+    return None
+
+
 class LogLine:
     def __init__(self, text):
         self.time_str = text[:26]
@@ -193,6 +214,8 @@ def handle_line(raw_line, active_items):
         return auction_award(line)
     if preregister_match(line):
         return preregister(line)
+    if waitlist_match(line):
+        return waitlist(line)
     if len(active_items) > 0 and received_tell_filter(raw_line):
         return {'action': 'FAILED_BID', 'data': line.contents, 'timestamp': line.timestamp()}
     return None

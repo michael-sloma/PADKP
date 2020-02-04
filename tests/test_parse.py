@@ -220,3 +220,13 @@ def test_preregister_alt():
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['value'] == 55
     assert result['alt']
+
+
+
+WAITLIST_ADD = "[Wed Jun 12 23:07:49 2019] You tell your raid, '!waitlist add Foobar'"
+def test_waitlist():
+    line = parse.LogLine(WAITLIST_ADD)
+    assert parse.waitlist_match(line)
+    result = parse.waitlist(line)
+    print(result)
+    assert result['action'] == 'WAITLIST_ADD'

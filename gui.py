@@ -54,6 +54,10 @@ class MainPage:
         dkp_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
         menu_bar.add_cascade(label="Awards", menu=dkp_menu)
 
+        waitlist_menu = tkinter.Menu(menu_bar, tearoff=0)
+        waitlist_menu.add_command(label="View waitlist", command=self.open_waitlist_window)
+        menu_bar.add_cascade(label="Waitlist", menu=waitlist_menu)
+
         master.config(menu=menu_bar)
 
         columns = ['item', 'item_count', 'status', 'winner', 'price']
@@ -185,7 +189,10 @@ class MainPage:
     @prompt_api_token
     def open_award_dkp_window(self):
         filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
-        AwardDkpWindow(self.master, self.api_token, self.config.get('dump_path'), filename)
+        AwardDkpWindow(self.master, self.api_token, self.config.get('dump_path'), filename, self.state.waitlist)
+
+    def open_waitlist_window(self):
+        WaitlistWindow(self.master, self.state)
 
     @prompt_api_token
     def quick_award_dkp(self):
@@ -194,6 +201,7 @@ class MainPage:
         notes = ''
         award_type = 'Time'
         selection = self.raid_dump_pane.selection()
+        waitlist = list(self.state.waitlist)
         if not selection:
             messagebox.showerror("", "Select a raid dump!")
             return
@@ -201,7 +209,7 @@ class MainPage:
         short_filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
         filename = os.path.join(self.config.get('dump_path'), short_filename)
         try:
-            result = api_client.award_dkp_from_dump(filename, award_type, dkp_value, attendance, notes, self.api_token)
+            result = api_client.award_dkp_from_dump(filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
         except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
@@ -395,8 +403,30 @@ class DetailsWindow:
         self.window.after(1000, self.redraw)
 
 
+class WaitlistWindow:
+    def __init__(self, master, state):
+        self.state = state  # save a reference to the auction dict
+        self.window = tkinter.Toplevel(master)
+        self.window.title('Waitlist')
+        columns = ['name', 'time']
+        self.tree = ttk.Treeview(self.window, columns=columns)
+        self.tree.heading('#0', text='name')
+        self.tree.heading('#1', text='time')
+        self.tree.grid()
+        self.close_button = tkinter.Button(self.window, text="Close",
+                                           command=self.window.destroy).grid()
+        self.redraw()
+
+    def redraw(self):
+        self.tree.delete(*self.tree.get_children())
+        for name, time in sorted(self.state.waitlist.items(), key=lambda x: x[1]):
+            values = (time,)
+            self.tree.insert('', 0, text=name, values=values)
+        self.window.after(1000, self.redraw)
+
+
 class AwardDkpWindow:
-    def __init__(self, master, api_token, path, filename):
+    def __init__(self, master, api_token, path, filename, waitlist):
         if filename:
             self.filename = os.path.join(path, filename)
         else:
@@ -435,6 +465,8 @@ class AwardDkpWindow:
         self.award_button.grid(row=5, column=0)
         self.close_button.grid(row=6, column=0)
 
+        self.waitlist = list(waitlist)
+
         self.api_token = api_token
 
     def award_dkp(self):
@@ -452,6 +484,7 @@ class AwardDkpWindow:
                                                     self.type_choice.get(),
                                                     value,
                                                     self.attendance_var.get(),
+                                                    self.waitlist,
                                                     self.notes_entry.get(),
                                                     self.api_token
                                                     )

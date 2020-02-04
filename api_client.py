@@ -21,7 +21,7 @@ def charge_dkp(character, item_name, value, time, notes, token):
     return requests.post('http://{}/api/charge_dkp/'.format(API_ROOT), json=request, headers=get_headers(token))
 
 
-def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, notes, token):
+def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, waitlist, notes, token):
     filename = os.path.split(filepath)[-1]
     dump_contents = open(filepath).read()
 
@@ -34,7 +34,8 @@ def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, notes, t
                "value": value,
                "counts_for_attendance": counts_for_attendance,
                "time": time_s,
-               "notes": notes
+               "notes": notes,
+               "waitlist": waitlist
                }
     return requests.post('http://{}/api/upload_dump/'.format(API_ROOT), json=request, headers=get_headers(token))
 

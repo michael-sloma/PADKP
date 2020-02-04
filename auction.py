@@ -10,8 +10,10 @@ class AuctionState:
         self.preregistered_bids = {}
         self.concluded_auctions = []
         self.my_name = my_name
+        self.waitlist = {}
 
     def update(self, action):
+        print(self.waitlist)
         # before we do anything else, we check if any auctions need to be expired
         result = ActionResult()
         for item, auction in list(self.active_auctions.items()):
@@ -21,6 +23,13 @@ class AuctionState:
                 iid = auction['iid']
                 item_count = auction['item_count']
                 result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Expired'))
+        # expire old waitlist entries
+        remove_from_waitlist = []
+        for name in self.waitlist:
+            if action['timestamp'] - self.waitlist[name] > dt.timedelta(hours=8):
+                remove_from_waitlist.append(name)
+        for name in remove_from_waitlist:
+            del self.waitlist[name]
 
         if action['action'] == 'AUCTION_START':
             # create a new auction
@@ -88,6 +97,15 @@ class AuctionState:
         elif action['action'] == 'PREREGISTER':
             print('got a prereg', action)
             self.preregistered_bids[action['item_name']] = action
+
+        elif action['action'] == 'WAITLIST_ADD':
+            print('got a waitlist entry', action)
+            self.waitlist[action['name']] = action['timestamp']
+
+        elif action['action'] in ['WAITLIST_REMOVE', 'WAITLIST_DELETE']:
+            print('got a waitlist delete', action)
+            if action['name'] in self.waitlist:
+                del self.waitlist[action['name']]
 
         return result
 
