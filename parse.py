@@ -121,7 +121,7 @@ def auction_award(line):
                 'timestamp': line.timestamp()}
     return None
 
-PREREGISTER_RE = (r"You told (?P<recipient>[A-Z][a-z]+), "
+PREREGISTER_RE = (r"You told (?P<recipient>[a-z]+), "
                   r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
                   r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
 

@@ -159,6 +159,7 @@ class MainPage:
 
     def choose_raid_dump_dir(self, path=None):
         self.raid_dump_pane.delete(*self.raid_dump_pane.get_children())
+        self.raid_dump_files.clear()
         if path is None:
             path = filedialog.askdirectory()
         if path:
