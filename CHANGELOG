@@ -1,3 +1,10 @@
+1.2.0
+*   Add a waitlist feature. Characters that are waitlisted will be automatically
+    awarded DKP for dumps uploaded in the next 8 hours.
+    Usage:
+        /rs !waitlist add Quaff
+        /rs /waitlist remove Quaff
+
 1.1.1
 *   Fix a bug where preregistered bids would be ignored if the recipient's name
     wasn't properly Capitalized in the tell.

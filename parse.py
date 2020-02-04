@@ -161,7 +161,7 @@ def waitlist_match(line):
 def waitlist(line):
     search = re.search(WAITLIST_RE, line.contents, re.IGNORECASE)
     if search:
-        name = search.group('name')
+        name = search.group('name').lower().capitalize()
         command = 'WAITLIST_' + search.group('command').upper()
         return {'action': command,
                 'name': name,
