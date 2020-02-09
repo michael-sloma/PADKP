@@ -13,7 +13,6 @@ class AuctionState:
         self.waitlist = {}
 
     def update(self, action):
-        print(self.waitlist)
         # before we do anything else, we check if any auctions need to be expired
         result = ActionResult()
         for item, auction in list(self.active_auctions.items()):

@@ -1,3 +1,14 @@
+1.2.1
+*   Corrected the "main beats alts" rule when there are multiple identical items.
+    Alts will no longer be frozen out of an auction if any main bids greater than 11.
+    Example: Mandy and Mike are mains and Adam is an alt, and 2 Cloak of Flames drop.
+    If Mandy bids 12, Adam bids 11, and Mike bids 10. Mandy and Adam will win.
+    If Mandy bids 13, Adam bids 12, and Mike bids 11, Mandy and Mike will win.
+
+*   Players can specify "inactive", "recruit", or "FNF" in their bid in addition to
+    "alt" and "box". These are treated identically to alt bids.
+
+
 1.2.0
 *   Add a waitlist feature. Characters that are waitlisted will be automatically
     awarded DKP for dumps uploaded in the next 8 hours.

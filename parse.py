@@ -36,7 +36,7 @@ def auction_bid(line, active_items):
     for item in active_items:
         window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
                               rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
-                              r'(dkp)?\s*(?P<alt>alt|box)?\s*(?P<comment>\|\|.*)?$')
+                              r'(dkp)?\s*(?P<alt>alt|box|inactive|recruit|fnf)?\s*(?P<comment>\|\|.*)?$')
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
                               rf"'\s*(?P<item>{item})\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
                               r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
