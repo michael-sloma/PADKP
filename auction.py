@@ -177,12 +177,12 @@ class AuctionState:
 
 
 def sort_bids(bids):
-    max_main_bid = max([0] + [bid['value'] for bid in bids.values() if not bid['alt']])
-    if max_main_bid >= MAIN_BEATS_ALTS_BID:
-        # alts can't beat mains
-        bid_comparison = lambda bid: (not bid[1]['alt'], bid[1]['value'])
-    else:
-        bid_comparison = lambda bid: bid[1]['value']
+    """
+    if the bid is 11 or higher and it's from a main, then the main wins
+    an alt can beat a main that bid 10 or less
+    """
+    bid_comparison = lambda bid: ((not bid[1]['alt']) and (bid[1]['value'] >= MAIN_BEATS_ALTS_BID),
+                                  bid[1]['value'])
     return sorted(bids.items(), key=bid_comparison, reverse=True)
 
 

@@ -115,3 +115,18 @@ def test_preregister_bid():
     assert update.update_rows[0].winner == 'Tester'
     assert update.update_rows[0].price == '20'
 
+
+def test_sort_bids_1():
+    bids = {'Adam': {'value': 100, 'comment': '', 'alt': True},
+            'Mandy': {'value': 11, 'comment': '', 'alt': False},
+            'Mike': {'value': 10, 'comment': '', 'alt': False}
+            }
+    sorted = auction.sort_bids(bids)
+    print(sorted)
+    ordering = [name for name, bid in sorted]
+
+    # a main that bids 11 or more beats an alt, no matter they they bid
+    # an alt that bids 11 or more can beat a main that bid 10 or less
+    assert ordering == ['Mandy', 'Adam', 'Mike']
+
+
