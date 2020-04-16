@@ -8,6 +8,55 @@ AUCTION_START_RE = COMMAND_RE.format(r'bids\s*open')
 AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
 
+SUICIDE_START_RE = COMMAND_RE.format(r'suicide\s*open')
+SUICIDE_CLOSE_RE = COMMAND_RE.format(r'suicide\s*closed')
+
+
+def suicide_start(line):
+    """
+    Start a suicide auction
+    An auction is starting by sending the following message in RAID SAY:
+    !Bids open ITEMLINK
+    Case doesn't matter
+    """
+    search = re.search(SUICIDE_START_RE,
+                       line.contents,
+                       re.IGNORECASE)
+    if search:
+        item_name = search.group('item')
+        item_count = search.group('number1') or search.group('number2') or '!1'
+        return {'action': 'SUICIDE_START',
+                'item_name': item_name.strip(),
+                'item_count': int(item_count.replace('!', '')),
+                'timestamp': line.timestamp()}
+    return None
+
+
+def suicide_close(line):
+    search = re.search(SUICIDE_CLOSE_RE, line.contents, re.IGNORECASE)
+    if search:
+        # TODO error handling if there is no such active auction
+        item_name = search.group('item')
+        return {'action': 'SUICIDE_CLOSE',
+                'item_name': item_name.strip(),
+                'timestamp': line.timestamp()}
+    return None
+
+
+def suicide_bid(line, active_items):
+    for item in active_items:
+        bid_format = (r"(?P<bidder>[A-Z][a-z]+) tells the raid, "
+                      rf"'\s*!\s*want\s*(?P<item>{item})\s*")
+        match = re.match(bid_format, line.contents, re.IGNORECASE)
+        if match is not None:
+            player_name = match.group('bidder')
+            item_name = match.group('item')
+            return {'action': 'SUICIDE_BID',
+                    'item_name': item_name.strip(),
+                    'player_name': player_name,
+                    'timestamp': line.timestamp()}
+    return None
+
 
 def auction_start_match(line):
     return re.match(AUCTION_START_RE, line.contents, re.IGNORECASE)
@@ -36,7 +85,7 @@ def auction_bid(line, active_items):
     for item in active_items:
         window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
                               rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
-                              r'(dkp)?\s*(?P<alt>alt|box|inactive|recruit|fnf)?\s*(?P<comment>\|\|.*)?$')
+                              r'(dkp)?\s*(?P<alt>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(?P<comment>\|\|.*)?$')
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
                               rf"'\s*(?P<item>{item})\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
                               r"(?P<alt>alt|box)?(?P<comment>\|\|.*)?")
@@ -216,6 +265,12 @@ def handle_line(raw_line, active_items):
         return preregister(line)
     if waitlist_match(line):
         return waitlist(line)
+    if suicide_bid(line, active_items):
+        return suicide_bid(line, active_items)
+    if suicide_start(line):
+        return suicide_start(line)
+    if suicide_close(line):
+        return suicide_close(line)
     if len(active_items) > 0 and received_tell_filter(raw_line):
         return {'action': 'FAILED_BID', 'data': line.contents, 'timestamp': line.timestamp()}
     return None

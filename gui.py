@@ -155,6 +155,8 @@ class MainPage:
 
         if 'dump_path' in self.config and os.path.exists(self.config['dump_path']):
             self.show_raid_dumps()
+
+        self.state.update({'action': 'initialize'}) # trigger the various events that happen "on update"
         print("LOADED")
 
     def choose_raid_dump_dir(self, path=None):
@@ -533,9 +535,9 @@ class AsyncioThread(threading.Thread):
                     if action is not None:
                         print('enqueued a line', line)
                         self.queue.put(('', action))
-                        if action['action'] == 'AUCTION_START':
+                        if action['action'] in ('AUCTION_START', 'SUICIDE_START'):
                             self.active_items.add(action['item_name'])
-                        if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD']:
+                        if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
                             self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')

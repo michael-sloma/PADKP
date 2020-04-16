@@ -30,7 +30,7 @@ class AuctionState:
         for name in remove_from_waitlist:
             del self.waitlist[name]
 
-        if action['action'] == 'AUCTION_START':
+        if action['action'] in ('AUCTION_START', 'SUICIDE_START'):
             # create a new auction
             item = action['item_name']
             timestamp = action['timestamp']
@@ -56,6 +56,16 @@ class AuctionState:
             bid = {'value': action['value'],
                    'comment': action['comment'],
                    'alt': action['alt']}
+            if item not in self.active_auctions:
+                return result
+            self.active_auctions[item]['bids'][player] = bid
+
+        elif action['action'] == 'SUICIDE_BID':
+            item = action['item_name']
+            player = action['player_name']
+            bid = {'value': '?',
+                   'comment': None,
+                   'alt': None}
             if item not in self.active_auctions:
                 return result
             self.active_auctions[item]['bids'][player] = bid
@@ -105,6 +115,10 @@ class AuctionState:
             print('got a waitlist delete', action)
             if action['name'] in self.waitlist:
                 del self.waitlist[action['name']]
+
+        elif action['action'] in ['WAITLIST_CLEAR', 'WAITLIST_PURGE']:
+            print('got a waitlist clear', action)
+            self.waitlist = {}
 
         return result
 
