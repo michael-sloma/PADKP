@@ -221,6 +221,31 @@ class MainPage:
         else:
             messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
 
+    @prompt_api_token
+    def casual_award_dkp(self):
+        dkp_value = 1
+        attendance = 1
+        notes = ''
+        award_type = 'Time'
+        selection = self.raid_dump_pane.selection()
+        waitlist = list(self.state.waitlist)
+        if not selection:
+            messagebox.showerror("", "Select a raid dump!")
+            return
+
+        short_filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
+        filename = os.path.join(self.config.get('dump_path'), short_filename)
+        try:
+            result = api_client.award_casual_dkp_from_dump(filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
+        except Exception:
+            messagebox.showerror("", "Action Failed, no DKP awarded")
+            raise
+        if result.status_code == 201:
+            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(dkp_value, short_filename))
+        else:
+            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
+
+
     def open_details_window(self):
         iid = self.tree.focus()
         auction = self.state.get_auction_by_iid(iid)
