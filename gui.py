@@ -130,6 +130,7 @@ class MainPage:
         raid_dump_context_menu = tkinter.Menu(self.frame, tearoff=0)
         raid_dump_context_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
         raid_dump_context_menu.add_command(label="Quick award DKP (Ctrl-Shift-W)", command=self.quick_award_dkp)
+        raid_dump_context_menu.add_command(label="Award CASUAL RAID DKP (Ctrl-Shift-M)", command=self.casual_award_dkp)
 
         # add keyboard shortcuts
         self.master.bind("<Control-f>", lambda _: self.open_log_file())
@@ -141,6 +142,7 @@ class MainPage:
         self.master.bind("<Control-b>", lambda _: self.charge_dkp())
         self.master.bind("<Control-w>", lambda _: self.open_award_dkp_window())
         self.master.bind("<Control-Shift-W>", lambda _: self.quick_award_dkp())
+        self.master.bind("<Control-Shift-M>", lambda _: self.casual_award_dkp())
         self.master.bind("<Control-t>", lambda _: self.ask_api_token())
         self.master.bind("<Control-r>", lambda _: self.choose_raid_dump_dir())
 
