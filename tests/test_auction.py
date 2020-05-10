@@ -117,16 +117,30 @@ def test_preregister_bid():
 
 
 def test_sort_bids_1():
-    bids = {'Adam': {'value': 100, 'comment': '', 'alt': True},
-            'Mandy': {'value': 11, 'comment': '', 'alt': False},
-            'Mike': {'value': 10, 'comment': '', 'alt': False}
+    bids = {'Adam': {'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True},
+            'Mandy': {'value': 6, 'comment': '', 'status_flag': None, 'is_alt': False},
+            'Mike': {'value': 5, 'comment': '', 'status_flag': None, 'is_alt': False}
             }
     sorted = auction.sort_bids(bids)
     print(sorted)
     ordering = [name for name, bid in sorted]
 
-    # a main that bids 11 or more beats an alt, no matter they they bid
-    # an alt that bids 11 or more can beat a main that bid 10 or less
+    # a main that bids 6 or more beats an alt, no matter they they bid
+    # an alt that bids 6 or more can beat a main that bid 5 or less
     assert ordering == ['Mandy', 'Adam', 'Mike']
+
+
+def test_sort_bids_2():
+    bids = {'Adam': {'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True},
+            'Frank': {'value': 11, 'comment': '', 'status_flag': 'fnf', 'is_alt': False},
+            'Mandy': {'value': 10, 'comment': '', 'status_flag': None, 'is_alt': False}
+            }
+    sorted = auction.sort_bids(bids)
+    print(sorted)
+    ordering = [name for name, bid in sorted]
+
+    # the alt is totally frozen out because the bid was 6 or higher
+    # the FNF beats the main because the main did not bid 11 or higher
+    assert ordering == ['Frank', 'Mandy', 'Adam']
 
 

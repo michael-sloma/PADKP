@@ -415,12 +415,13 @@ class DetailsWindow:
         self.auction = auction  # save a reference to the auction dict
         self.window = tkinter.Toplevel(master)
         self.window.title('Auction details: {}'.format(auction['item']))
-        columns = ['name', 'bid', 'alt?', 'comment']
+        columns = ['name', 'bid', 'status_flag', 'alt?', 'comment']
         self.tree = ttk.Treeview(self.window, columns=columns)
         self.tree.heading('#0', text='name')
         self.tree.heading('#1', text='bid')
-        self.tree.heading('#2', text='alt?')
-        self.tree.heading('#3', text='comment')
+        self.tree.heading('#2', text='status flag')
+        self.tree.heading('#3', text='alt?')
+        self.tree.heading('#4', text='comment')
         self.tree.grid()
         self.close_button = tkinter.Button(self.window, text="Close", command=self.window.destroy).grid()
         self.redraw()
@@ -428,7 +429,9 @@ class DetailsWindow:
     def redraw(self):
         self.tree.delete(*self.tree.get_children())
         for name, bid in sorted(self.auction['bids'].items(), key=lambda x: x[1]['value']):
-            values = (bid['value'], 'yes' if bid['alt'] else 'no', bid['comment'])
+            status_flag = '' if bid['status_flag'] is None else bid['status_flag']
+            is_alt = 'yes' if bid['is_alt'] else 'no'
+            values = (bid['value'], status_flag, is_alt, bid['comment'])
             self.tree.insert('', 0, text=name, values=values)
         self.window.after(1000, self.redraw)
 

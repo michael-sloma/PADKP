@@ -44,7 +44,12 @@ class AuctionState:
             # if we've pre-registered a bid for this item, add it to the auction now
             if item in self.preregistered_bids:
                 pre_bid = self.preregistered_bids[item]
-                bid = {'value': pre_bid['value'], 'comment': pre_bid['comment'], 'alt': pre_bid['alt']}
+                bid = {'value': pre_bid['value'],
+                       'comment': pre_bid['comment'],
+                       'is_alt': pre_bid['is_alt'],
+                       'status_flag': pre_bid['status_flag'],
+                       'is_second_class_citizen': pre_bid['status_flag'] is not None,
+                       }
                 self.active_auctions[item]['bids'][self.my_name] = bid
                 del self.preregistered_bids[item]
 
@@ -55,9 +60,13 @@ class AuctionState:
             player = action['player_name']
             bid = {'value': action['value'],
                    'comment': action['comment'],
-                   'alt': action['alt']}
+                   'is_alt': action['is_alt'],
+                   'status_flag': action['status_flag'],
+                   'is_second_class_citizen': action['status_flag'] is not None,
+                   }
             if item not in self.active_auctions:
                 return result
+            print('NEW BID', bid)
             self.active_auctions[item]['bids'][player] = bid
 
         elif action['action'] == 'SUICIDE_BID':
@@ -121,7 +130,6 @@ class AuctionState:
             self.waitlist = {}
 
         return result
-
 
     def archive_current_auction(self, item):
         self.concluded_auctions.append(self.active_auctions[item])
@@ -189,13 +197,29 @@ class AuctionState:
         return None
 
 
+def calculate_bid_tier(bid):
+    """ determine the priority for a bid, based on who sent it and how much they bid """
+    tier_2_threshold = 11
+    tier_1_threshold = 6
+    char_name, bid = bid
+    value = bid['value']
+    if not bid['status_flag'] and value >= tier_2_threshold:
+        return 2
+    elif not bid['is_alt'] and value >= tier_1_threshold:
+        return 1
+    else:
+        return 0
+
+
 def sort_bids(bids):
     """
     if the bid is 11 or higher and it's from a main, then the main wins
     an alt can beat a main that bid 10 or less
     """
-    bid_comparison = lambda bid: ((not bid[1]['alt']) and (bid[1]['value'] >= MAIN_BEATS_ALTS_BID),
-                                  bid[1]['value'])
+    def bid_comparison(bid):
+        bid_value = bid[1]['value']
+        bid_tier = calculate_bid_tier(bid)
+        return bid_tier, bid_value
     return sorted(bids.items(), key=bid_comparison, reverse=True)
 
 

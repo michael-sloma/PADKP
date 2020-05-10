@@ -145,7 +145,7 @@ def test_auction_bid_alt(comment, bid_message, expect_alt):
     input_line = parse.LogLine(bid_message)
     result = parse.auction_bid(input_line, DEFAULT_ITEMS)
     assert result is not None
-    assert result['alt'] == expect_alt
+    assert result['is_alt'] == expect_alt
 
 
 @pytest.mark.parametrize('comment, bids_closed_message',
@@ -207,11 +207,10 @@ def test_preregister():
     assert result['action'] == 'PREREGISTER'
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['value'] == 55
-    assert not result['alt']
+    assert not result['is_alt']
 
 
 def test_preregister_alt():
-    print(parse.PREREGISTER_RE)
     line = parse.LogLine(PREREGISTER_ALT)
     assert parse.preregister_match(line)
     result = parse.preregister(line)
@@ -219,7 +218,8 @@ def test_preregister_alt():
     assert result['action'] == 'PREREGISTER'
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['value'] == 55
-    assert result['alt']
+    assert result['is_alt']
+    assert result['status_flag'] == 'box'
 
 
 
