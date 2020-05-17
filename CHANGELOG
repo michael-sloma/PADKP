@@ -1,3 +1,10 @@
+1.3.2
+*   All members of a raid may now add and remove characters from the waitlist
+*   Characters will be removed from the waitlist when they join the current raid
+
+1.3.1
+*   Fix a bug where a malformed !correction command could break the bot
+
 1.3.0
 *   LDON rules update. There are not 3 tiers of bidding. Full members, then FNF/inactive/recruit,
     then alts/boxes. Full members have priority when the bid is 11 or higher. Members and

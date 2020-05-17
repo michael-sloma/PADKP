@@ -97,6 +97,11 @@ class AuctionState:
         elif action['action'] == 'AUCTION_AWARD':
             item = action['item_name']
             auction = self.get_most_recent_auction_by_name(item)
+            if auction is None:
+                print('could not find the auction to award. typo or malformed command?')
+                line = action['data']
+                result.status_messages.append(f'Failed to parse auction award: {line}')
+                return result
             iid = auction['iid']
             item_count = auction['item_count']
 
@@ -105,7 +110,7 @@ class AuctionState:
             result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Concluded',
                                           winner=winners, price=bids))
             if item in self.active_auctions:
-                del self.active_auctions[item]
+                self.archive_current_auction(item)
 
         elif action['action'] == 'FAILED_BID':
             if self.active_auctions:

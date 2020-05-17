@@ -173,6 +173,7 @@ def auction_award(line):
                 'item_name': item_name,
                 'winners': winners,
                 'bids': bids,
+                'data': line.contents,
                 'timestamp': line.timestamp()}
     return None
 
