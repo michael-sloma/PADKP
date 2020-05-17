@@ -206,11 +206,12 @@ def preregister(line):
     return None
 
 
-WAITLIST_RE = ("You tell your raid, "
+WAITLIST_RE = ("(You tell your|[A-Z][a-z]+ tells the) raid, "
                r"'\s*!waitlist\s*"
                r"(?P<command>[a-z]+)\s+"
                r"(?P<name>[A-Z][a-z]+)")
 
+JOINED_RAID_RE = r"(?P<name>[A-Z][a-z]+) joined the raid."
 
 def waitlist_match(line):
     return re.match(WAITLIST_RE, line.contents, re.IGNORECASE)
@@ -227,6 +228,16 @@ def waitlist(line):
     return None
 
 
+def joined_raid(line):
+    search = re.search(JOINED_RAID_RE, line.contents, re.IGNORECASE)
+    if search:
+        name = search.group('name').lower().capitalize()
+        return {'action': 'JOINED RAID',
+                'name': name,
+                'timestamp': line.timestamp()}
+    return None
+
+
 class LogLine:
     def __init__(self, text):
         self.time_str = text[:26]
@@ -238,7 +249,7 @@ class LogLine:
 
 def pre_filter(raw_line):
     """pre-filter lines. if it's not a tell or raid say, we know we don't care"""
-    return re.match("^.{27}[A-Z][a-z]* (tells the|tell your) raid", raw_line) or tell_filter(raw_line)
+    return re.match("^.{27}[A-Z][a-z]* (tells the|tell your|joined the) raid", raw_line) or tell_filter(raw_line)
 
 
 def received_tell_filter(raw_line):
@@ -274,6 +285,8 @@ def handle_line(raw_line, active_items):
         return preregister(line)
     if waitlist_match(line):
         return waitlist(line)
+    if joined_raid(line):
+        return joined_raid(line)
     if suicide_bid(line, active_items):
         return suicide_bid(line, active_items)
     if suicide_start(line):

@@ -130,6 +130,12 @@ class AuctionState:
             if action['name'] in self.waitlist:
                 del self.waitlist[action['name']]
 
+        elif action['action'] == 'JOINED RAID':
+            print('character joined raid', action)
+            if action['name'] in self.waitlist:
+                print('removing {} from waitlist'.format(action['name']))
+                del self.waitlist[action['name']]
+
         elif action['action'] in ['WAITLIST_CLEAR', 'WAITLIST_PURGE']:
             print('got a waitlist clear', action)
             self.waitlist = {}
