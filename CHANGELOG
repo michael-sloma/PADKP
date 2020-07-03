@@ -1,3 +1,9 @@
+1.4.0
+*   At long last, tiebreaks are here! Right click on a tied auction to attempt to
+    break the tie. A validly formatted tiebreak command will be copied to your
+    clipboard.
+
+
 1.3.2
 *   All members of a raid may now add and remove characters from the waitlist
 *   Characters will be removed from the waitlist when they join the current raid

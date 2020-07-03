@@ -68,3 +68,8 @@ def award_dkp(character, value, attendance_value, notes, token):
     time = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     request = {'character': character, 'value': value, 'attendance_value': attendance_value, 'time': time, 'notes': notes}
     return requests.post('http://{}/api/awards/'.format(API_ROOT), json=request, headers=get_headers(token))
+
+
+def tiebreak(characters, token):
+    request = {'characters': characters}
+    return requests.post('http://{}/api/tiebreak/'.format(API_ROOT), json=request, headers=get_headers(token))

@@ -147,13 +147,13 @@ def auction_cancel(line):
     return None
 
 AUCTION_AWARD_RE = ("You tell your raid, "
-                    r"'\s*!correction\s*!award\s*"
+                    r"'\s*!(correction|tiebreak)\s*!award\s*"
                     r"(?P<item>.*?)\s+"
                     r"(?P<name>[A-Z][a-z]+)\s+"
                     r"(?P<value>[0-9]+)\s+"
                     r"(?P<comment>\|\|.*)?'$")
 
-AUCTION_AWARD_RE = r"You tell your raid, '\s*!correction\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
+AUCTION_AWARD_RE = r"You tell your raid, '\s*!(correction|tiebreak)\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
 
 
 def auction_award_match(line):

@@ -48,6 +48,7 @@ class MainPage:
         auction_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
         auction_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
         auction_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+        auction_menu.add_command(label="Tiebreak", command=self.tiebreak)
         menu_bar.add_cascade(label="Auctions", menu=auction_menu)
 
         dkp_menu = tkinter.Menu(menu_bar, tearoff=0)
@@ -121,6 +122,7 @@ class MainPage:
         auction_context_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
         auction_context_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
         auction_context_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+        auction_context_menu.add_command(label="Tiebreak", command=self.tiebreak)
 
         def raid_dump_context_menu_popup(event):
             self.raid_dump_pane.focus()
@@ -284,6 +286,48 @@ class MainPage:
         report = self._text_report(self.tree.selection())
         self.master.clipboard_clear()
         self.master.clipboard_append(report)
+
+    @prompt_api_token
+    def tiebreak(self):
+        selected = self.tree.selection()
+        if len(selected) != 1:
+            messagebox.showerror('select exactly one tied auction!')
+            return
+
+        row_id = selected[0]
+        row = self.tree.item(row_id)
+        vals = row['values']
+        item_name = vals[0]
+        item_count = int(vals[1])
+        if vals[2] != 'Tied':
+            messagebox.showerror('Auction is not tied!')
+            return
+        winners = [x.strip() for x in vals[3].split(',')]
+        costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
+        name_cost_map = dict(zip(winners, costs))
+        lowest_winning_bid = min(costs)
+        tied_characters = [winner for winner, cost in zip(winners, costs) if cost==lowest_winning_bid]
+        non_tied_characters = [winner for winner, cost in zip(winners, costs) if cost>lowest_winning_bid]
+        n_way_tie = item_count - len(non_tied_characters)
+        result = api_client.tiebreak(tied_characters, self.api_token)
+        if result.status_code == 200:
+            ordering = [name for name, explanation in result.json()]
+            explanations = '\n'.join([explanation for name, explanation in result.json()])
+            tiebreak_winners = ordering[:n_way_tie]
+            message = 'Tiebreak winner(s): {}'.format(', '.join(tiebreak_winners)) + '\n\n' + 'Explanation:\n' + explanations
+            messagebox.showinfo('tiebreak', message)
+
+            all_winners = non_tied_characters + tiebreak_winners
+            all_costs = [name_cost_map[name] for name in all_winners]
+            new_winner_list = ', '.join(winner + ' ' + str(cost) for winner, cost in zip(all_winners, all_costs))
+
+            correction_message = '!tiebreak !award {} !to {}'.format(item_name, new_winner_list)
+            self.master.clipboard_clear()
+            self.master.clipboard_append(correction_message)
+        else:
+            err_msg = 'Could not break tie.\nSend Quaff a bug report with a screenshot of this error message.\n\n{}' \
+                .format(result.text)
+            messagebox.showerror('Could not break tie', err_msg)
 
     @prompt_api_token
     def charge_dkp(self):
