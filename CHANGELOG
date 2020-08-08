@@ -1,3 +1,6 @@
+1.4.1
+*   Fixed an issue where auctions with alt bids could be incorrectly reported as being tied.
+
 1.4.0
 *   At long last, tiebreaks are here! Right click on a tied auction to attempt to
     break the tie. A validly formatted tiebreak command will be copied to your

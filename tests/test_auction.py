@@ -80,6 +80,23 @@ def test_whole_auction_case_4():
     assert update.update_rows[0].winner == 'Baz'
     assert update.update_rows[0].price == '30'
 
+
+def test_whole_auction_case_5():
+    """ test that a tied bid above the alt threshold is correctly awarded to the main"""
+    auc = auction.AuctionState()
+    lines = [
+        "[Wed Jun 12 23:01:33 2019] You tell your raid, '!Bids open Green Dragon Scale'",
+        "[Wed Jun 12 23:03:49 2019] Foobar -> Quaff: Green Dragon Scale  10",
+        "[Wed Jun 12 23:04:49 2019] Grunt -> Quaff: Green Dragon Scale  10 alt",
+        "[Wed Jun 12 23:05:49 2019] Papapa -> Quaff: Green Dragon Scale  5",
+        "[Wed Jun 12 23:07:33 2019] You tell your raid, '!Bids closed Green Dragon Scale'",
+    ]
+    for line in lines:
+        action = parse.handle_line(line, set(['Cloak of Flames', 'Green Dragon Scale']))
+        auc.update(action)
+    assert len(auc.concluded_auctions) == 1  # bids are tied, auction wasn't completed
+
+
 def test_failed_bid_case():
     auc = auction.AuctionState()
     lines = [
@@ -117,13 +134,13 @@ def test_preregister_bid():
 
 
 def test_sort_bids_1():
-    bids = {'Adam': {'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True},
-            'Mandy': {'value': 6, 'comment': '', 'status_flag': None, 'is_alt': False},
-            'Mike': {'value': 5, 'comment': '', 'status_flag': None, 'is_alt': False}
+    bids = {'Adam': {'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
+            'Mandy': {'player': 'Mandy', 'value': 6, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (1, 6)},
+            'Mike': {'player': 'Mike', 'value': 5, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (0, 5)}
             }
-    sorted = auction.sort_bids(bids)
+    sorted = auction.sort_bids(bids.values())
     print(sorted)
-    ordering = [name for name, bid in sorted]
+    ordering = [x['player'] for x in sorted]
 
     # a main that bids 6 or more beats an alt, no matter they they bid
     # an alt that bids 6 or more can beat a main that bid 5 or less
@@ -131,13 +148,13 @@ def test_sort_bids_1():
 
 
 def test_sort_bids_2():
-    bids = {'Adam': {'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True},
-            'Frank': {'value': 11, 'comment': '', 'status_flag': 'fnf', 'is_alt': False},
-            'Mandy': {'value': 10, 'comment': '', 'status_flag': None, 'is_alt': False}
+    bids = {'Adam': {'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
+            'Frank': {'player': 'Frank', 'value': 11, 'comment': '', 'status_flag': 'fnf', 'is_alt': False, 'tier': 1, 'cmp': (1, 11)},
+            'Mandy': {'player': 'Mandy', 'value': 10, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 1, 'cmp': (1, 10)}
             }
-    sorted = auction.sort_bids(bids)
+    sorted = auction.sort_bids(bids.values())
     print(sorted)
-    ordering = [name for name, bid in sorted]
+    ordering = [x['player'] for x in sorted]
 
     # the alt is totally frozen out because the bid was 6 or higher
     # the FNF beats the main because the main did not bid 11 or higher

@@ -44,11 +44,15 @@ class AuctionState:
             # if we've pre-registered a bid for this item, add it to the auction now
             if item in self.preregistered_bids:
                 pre_bid = self.preregistered_bids[item]
+                tier = _calculate_bid_tier(pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
                 bid = {'value': pre_bid['value'],
                        'comment': pre_bid['comment'],
                        'is_alt': pre_bid['is_alt'],
                        'status_flag': pre_bid['status_flag'],
                        'is_second_class_citizen': pre_bid['status_flag'] is not None,
+                       'player': self.my_name,
+                       'tier': tier,
+                       'cmp': (tier, pre_bid['value'])
                        }
                 self.active_auctions[item]['bids'][self.my_name] = bid
                 del self.preregistered_bids[item]
@@ -58,11 +62,15 @@ class AuctionState:
         elif action['action'] == 'BID':
             item = action['item_name']
             player = action['player_name']
+            tier = _calculate_bid_tier(action['value'], action['status_flag'], action['is_alt'])
             bid = {'value': action['value'],
                    'comment': action['comment'],
                    'is_alt': action['is_alt'],
                    'status_flag': action['status_flag'],
                    'is_second_class_citizen': action['status_flag'] is not None,
+                   'player': action['player_name'],
+                   'tier': tier,
+                   'cmp': (tier, action['value'])
                    }
             if item not in self.active_auctions:
                 return result
@@ -157,7 +165,7 @@ class AuctionState:
         n_bids = len(bids)
 
         # check if a main bid 5 or more. if so, alts can't beat mains
-        sorted_bids = sort_bids(bids)
+        sorted_bids = sort_bids(bids.values())
 
         tie = False
         # there are no bids. Item rots.
@@ -165,26 +173,26 @@ class AuctionState:
             result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner='ROT')
         # there are at least as many items as bidders. Everyone gets loot.
         elif n_bids <= n_items:
-            winners = [x[0] for x in sorted_bids]
-            prices = [str(x[1]['value']) for x in sorted_bids]
+            winners = [x['player'] for x in sorted_bids]
+            prices = [str(x['value']) for x in sorted_bids]
             while len(winners) < n_items:
                 winners.append('ROT')
             result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner=', '.join(winners),
                        price=', '.join(prices))
         # there more more bidders than items. We have to compare bids.
         else:
-            lowest_winning_bid = sorted_bids[n_items-1][1]['value']
-            next_lower_bid = sorted_bids[n_items][1]['value']
+            lowest_winning_bid = sorted_bids[n_items-1]['cmp']
+            next_lower_bid = sorted_bids[n_items]['cmp']
             if lowest_winning_bid == next_lower_bid:
                 tie = True
-                tied_bids = [x for x in sorted_bids if x[1]['value'] >= lowest_winning_bid]
-                winners = ', '.join(x[0] for x in tied_bids)
-                prices = ', '.join(str(x[1]['value']) for x in tied_bids)
+                tied_bids = [x for x in sorted_bids if x['cmp'] >= lowest_winning_bid]
+                winners = ', '.join(x['player'] for x in tied_bids)
+                prices = ', '.join(str(x['value']) for x in tied_bids)
                 result = Row(iid=iid, item=item, item_count=n_items, status='Tied', winner=winners, price=prices)
             else:
                 winning_bids = sorted_bids[:n_items]
-                winners = ', '.join(x[0] for x in winning_bids)
-                prices = ', '.join(str(x[1]['value']) for x in winning_bids)
+                winners = ', '.join(x['player'] for x in winning_bids)
+                prices = ', '.join(str(x['value']) for x in winning_bids)
                 result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner=winners, price=prices)
         if not tie:
             self.archive_current_auction(item)
@@ -210,13 +218,17 @@ class AuctionState:
 
 def calculate_bid_tier(bid):
     """ determine the priority for a bid, based on who sent it and how much they bid """
+    char_name, bid = bid
+    return _calculate_bid_tier(bid['value'], bid['status_flag'], bid['is_alt'])
+
+
+def _calculate_bid_tier(value, status_flag, is_alt):
+    """ determine the priority for a bid, based on who sent it and how much they bid """
     tier_2_threshold = 11
     tier_1_threshold = 6
-    char_name, bid = bid
-    value = bid['value']
-    if not bid['status_flag'] and value >= tier_2_threshold:
+    if not status_flag and value >= tier_2_threshold:
         return 2
-    elif not bid['is_alt'] and value >= tier_1_threshold:
+    elif not is_alt and value >= tier_1_threshold:
         return 1
     else:
         return 0
@@ -227,11 +239,7 @@ def sort_bids(bids):
     if the bid is 11 or higher and it's from a main, then the main wins
     an alt can beat a main that bid 10 or less
     """
-    def bid_comparison(bid):
-        bid_value = bid[1]['value']
-        bid_tier = calculate_bid_tier(bid)
-        return bid_tier, bid_value
-    return sorted(bids.items(), key=bid_comparison, reverse=True)
+    return sorted(bids, key=lambda bid: bid['cmp'], reverse=True)
 
 
 class ActionResult:
