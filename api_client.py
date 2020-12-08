@@ -1,6 +1,6 @@
 import datetime as dt
 import requests
-import timestamps
+from padkp import timestamps
 import os
 
 API_ROOT = 'padkp.net'

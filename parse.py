@@ -195,8 +195,6 @@ def preregister(line):
         item_name = search.group('item')
         value = search.group('bid')
         status_flag = search.group('status_flag')
-        is_alt = status_flag is not None and status_flag.lower() in [
-            'alt', 'box']
         comment = search.group('comment')
         return {'action': 'PREREGISTER',
                 'item_name': item_name.strip(),

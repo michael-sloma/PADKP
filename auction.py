@@ -231,7 +231,7 @@ class AuctionState:
 
 def calculate_bid_tier(bid):
     """ determine the priority for a bid, based on who sent it and how much they bid """
-    char_name, bid = bid
+    _char_name, bid = bid
     return _calculate_bid_tier(bid['value'], bid['status_flag'], bid['is_alt'])
 
 

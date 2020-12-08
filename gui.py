@@ -13,10 +13,10 @@ import os
 import re
 
 import api_client
-import parse
-import auction
+from padkp import parse
+from padkp import auction
 import timestamps
-import config
+from padkp import config
 
 
 def prompt_api_token(f):
@@ -464,7 +464,7 @@ class MainPage:
 
     def update_gui(self):
         while not self.queue.empty():
-            key, action = self.queue.get()
+            _key, action = self.queue.get()
             print('read a piece of data:', action)
             action_result = self.state.update(action)
             self.show_result(action_result)
@@ -521,7 +521,8 @@ class DetailsWindow:
         self.tree.heading('#4', text='comment')
         self.tree.grid()
         self.close_button = tkinter.Button(
-            self.window, text="Close", command=self.window.destroy).grid()
+            self.window, text="Close", command=self.window.destroy)
+        self.close_button.grid()
         self.redraw()
 
     def redraw(self):
@@ -545,7 +546,8 @@ class WaitlistWindow:
         self.tree.heading('#1', text='time')
         self.tree.grid()
         self.close_button = tkinter.Button(self.window, text="Close",
-                                           command=self.window.destroy).grid()
+                                           command=self.window.destroy)
+        self.close_button.grid()
         self.redraw()
 
     def redraw(self):
@@ -687,7 +689,7 @@ class AsyncioThread(threading.Thread):
 def main():
     root = tkinter.Tk()
     root.title('Phoenix Ascended Auction Manager')
-    d = MainPage(root)
+    MainPage(root)
     root.mainloop()
 
 
