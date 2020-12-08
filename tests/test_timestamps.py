@@ -43,3 +43,25 @@ def test_timestamp_reversible():
     test_s = "Jan 01 2020, 10:00 AM"
     assert timestamps.time_to_gui_display(
         (timestamps.time_from_gui_display(test_s))) == test_s
+
+
+def test_nearest_time():
+    test_time_round_up = dt.datetime(month=1, day=1, year=2020,
+                                     hour=21, minute=15, second=5, microsecond=2205)
+    test_time_round_down = dt.datetime(month=1, day=1, year=2020,
+                                       hour=21, minute=14, second=5, microsecond=2205)
+    test_time_round_up_hour = dt.datetime(month=1, day=1, year=2020,
+                                          hour=21, minute=45, second=5, microsecond=2205)
+
+    assert timestamps.pick_nearest_time(test_time_round_up).minute == 30
+    assert timestamps.pick_nearest_time(test_time_round_down).minute == 0
+    assert timestamps.pick_nearest_time(test_time_round_up_hour).hour == 22
+    assert timestamps.pick_nearest_time(test_time_round_up_hour).minute == 0
+
+
+def test_time_choices():
+    test_time = dt.datetime(month=1, day=1, year=2020,
+                            hour=21, minute=15, second=5, microsecond=2205)
+    time_choices = timestamps.build_time_choices(test_time)
+    assert time_choices == ['Jan 01 2020, 07:00 PM', 'Jan 01 2020, 07:30 PM', 'Jan 01 2020, 08:00 PM',
+                            'Jan 01 2020, 08:30 PM', 'Jan 01 2020, 09:00 PM', 'Jan 01 2020, 09:30 PM']

@@ -13,10 +13,10 @@ import os
 import re
 
 import api_client
-from padkp import parse
-from padkp import auction
+import parse
+import auction
 import timestamps
-from padkp import config
+import config
 
 
 def prompt_api_token(f):
@@ -252,7 +252,7 @@ class MainPage:
         filename = os.path.join(self.config.get('dump_path'), short_filename)
         try:
             result = api_client.award_dkp_from_dump(
-                filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
+                filename, award_type, dkp_value, attendance, waitlist, notes, timestamps.pick_nearest_time(dt.datetime.now()), self.api_token)
         except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
@@ -576,9 +576,15 @@ class AwardDkpWindow:
         self.type_choice = tkinter.StringVar(self.window)
         choices = ['Time', "Boss Kill", "Other"]
         self.type_choice_menu = tkinter.OptionMenu(
-            self.window, self.type_choice, *choices)
+            self.window, self.type_choice, *choices, command=lambda event: self.type_change(event))
         self.type_choice_menu.grid(
             row=1, column=1, columnspan=2, sticky=tkinter.E+tkinter.W)
+
+        self.time_choice = tkinter.StringVar(self.window)
+        time_choices = timestamps.build_time_choices(
+            timestamps.time_from_raid_dump(short_filename))
+        self.time_choice_menu = tkinter.OptionMenu(
+            self.window, self.time_choice, *time_choices)
 
         self.value_label = tkinter.Label(self.window, text="DKP")
         self.value_entry = tkinter.Entry(self.window)
@@ -602,12 +608,20 @@ class AwardDkpWindow:
             self.window, text="Award DKP", command=self.award_dkp)
         self.close_button = tkinter.Button(
             self.window, text="Cancel", command=self.window.destroy)
-        self.award_button.grid(row=5, column=0)
+        self.award_button.grid(row=6, column=1)
         self.close_button.grid(row=6, column=0)
 
         self.waitlist = list(waitlist)
 
         self.api_token = api_token
+
+    def type_change(self, event):
+        if 'Time' == self.type_choice.get():
+            self.time_choice_menu.grid(
+                row=1, column=0)
+        else:
+            self.time_choice_menu.grid_remove()
+        pass
 
     def award_dkp(self):
         try:
@@ -619,13 +633,25 @@ class AwardDkpWindow:
         if not self.type_choice.get():
             messagebox.showerror("", "Must choose time, boss kill, or other")
             return
+
         try:
+            timestamp = None
+
+            if 'Time' == self.type_choice.get():
+                if not self.time_choice.get():
+                    messagebox.showerror(
+                        "", "Must choose a time slot for Time award")
+                    return
+                timestamp = timestamps.time_from_gui_display(
+                    self.time_choice.get())
+
             result = api_client.award_dkp_from_dump(self.filename,
                                                     self.type_choice.get(),
                                                     value,
                                                     self.attendance_var.get(),
                                                     self.waitlist,
                                                     self.notes_entry.get(),
+                                                    timestamp,
                                                     self.api_token
                                                     )
             print(result)
