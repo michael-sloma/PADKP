@@ -21,7 +21,8 @@ class AuctionState:
                 self.archive_current_auction(item)
                 iid = auction['iid']
                 item_count = auction['item_count']
-                result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Expired'))
+                result.update_rows.append(
+                    Row(iid=iid, item=item, item_count=item_count, status='Expired'))
         # expire old waitlist entries
         remove_from_waitlist = []
         for name in self.waitlist:
@@ -44,7 +45,8 @@ class AuctionState:
             # if we've pre-registered a bid for this item, add it to the auction now
             if item in self.preregistered_bids:
                 pre_bid = self.preregistered_bids[item]
-                tier = _calculate_bid_tier(pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
+                tier = _calculate_bid_tier(
+                    pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
                 bid = {'value': pre_bid['value'],
                        'comment': pre_bid['comment'],
                        'is_alt': pre_bid['is_alt'],
@@ -57,12 +59,14 @@ class AuctionState:
                 self.active_auctions[item]['bids'][self.my_name] = bid
                 del self.preregistered_bids[item]
 
-            result.add_rows.append(Row(iid=iid, timestamp=timestamp, item=item, item_count=item_count, status='Open'))
+            result.add_rows.append(Row(
+                iid=iid, timestamp=timestamp, item=item, item_count=item_count, status='Open'))
 
         elif action['action'] == 'BID':
             item = action['item_name']
             player = action['player_name']
-            tier = _calculate_bid_tier(action['value'], action['status_flag'], action['is_alt'])
+            tier = _calculate_bid_tier(
+                action['value'], action['status_flag'], action['is_alt'])
             bid = {'value': action['value'],
                    'comment': action['comment'],
                    'is_alt': action['is_alt'],
@@ -100,7 +104,8 @@ class AuctionState:
             iid = self.active_auctions[item]['iid']
             item_count = self.active_auctions[item]['item_count']
             del self.active_auctions[item]
-            result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
+            result.update_rows.append(
+                Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
 
         elif action['action'] == 'AUCTION_AWARD':
             item = action['item_name']
@@ -108,7 +113,8 @@ class AuctionState:
             if auction is None:
                 print('could not find the auction to award. typo or malformed command?')
                 line = action['data']
-                result.status_messages.append(f'Failed to parse auction award: {line}')
+                result.status_messages.append(
+                    f'Failed to parse auction award: {line}')
                 return result
             iid = auction['iid']
             item_count = auction['item_count']
@@ -170,7 +176,8 @@ class AuctionState:
         tie = False
         # there are no bids. Item rots.
         if n_bids == 0:
-            result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner='ROT')
+            result = Row(iid=iid, item=item, item_count=n_items,
+                         status='Concluded', winner='ROT')
         # there are at least as many items as bidders. Everyone gets loot.
         elif n_bids <= n_items:
             winners = [x['player'] for x in sorted_bids]
@@ -178,29 +185,33 @@ class AuctionState:
             while len(winners) < n_items:
                 winners.append('ROT')
             result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner=', '.join(winners),
-                       price=', '.join(prices))
+                         price=', '.join(prices))
         # there more more bidders than items. We have to compare bids.
         else:
             lowest_winning_bid = sorted_bids[n_items-1]['cmp']
             next_lower_bid = sorted_bids[n_items]['cmp']
             if lowest_winning_bid == next_lower_bid:
                 tie = True
-                tied_bids = [x for x in sorted_bids if x['cmp'] >= lowest_winning_bid]
+                tied_bids = [x for x in sorted_bids if x['cmp']
+                             >= lowest_winning_bid]
                 winners = ', '.join(x['player'] for x in tied_bids)
                 prices = ', '.join(str(x['value']) for x in tied_bids)
-                result = Row(iid=iid, item=item, item_count=n_items, status='Tied', winner=winners, price=prices)
+                result = Row(iid=iid, item=item, item_count=n_items,
+                             status='Tied', winner=winners, price=prices)
             else:
                 winning_bids = sorted_bids[:n_items]
                 winners = ', '.join(x['player'] for x in winning_bids)
                 prices = ', '.join(str(x['value']) for x in winning_bids)
-                result = Row(iid=iid, item=item, item_count=n_items, status='Concluded', winner=winners, price=prices)
+                result = Row(iid=iid, item=item, item_count=n_items,
+                             status='Concluded', winner=winners, price=prices)
         if not tie:
             self.archive_current_auction(item)
         return result
 
     def get_auction_by_iid(self, iid):
         print('searching iid', iid)
-        all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
+        all_auctions_ever = list(
+            self.active_auctions.values()) + self.concluded_auctions
         for auction in all_auctions_ever:
             if auction['iid'] == iid:
                 return auction
@@ -208,8 +219,10 @@ class AuctionState:
 
     def get_most_recent_auction_by_name(self, item_name):
         print('searching by name', item_name)
-        all_auctions_ever = list(self.active_auctions.values()) + self.concluded_auctions
-        all_auctions_ever = sorted(all_auctions_ever, key=lambda auc: auc['time'], reverse=True)
+        all_auctions_ever = list(
+            self.active_auctions.values()) + self.concluded_auctions
+        all_auctions_ever = sorted(
+            all_auctions_ever, key=lambda auc: auc['time'], reverse=True)
         for auction in all_auctions_ever:
             if auction['item'] == item_name:
                 return auction

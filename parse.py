@@ -83,22 +83,23 @@ def auction_start(line):
 
 def auction_bid(line, active_items):
     for item in active_items:
-        ## DEPRECATED
+        # DEPRECATED
         window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
-                              rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
-                              r'(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(?P<comment>\|\|.*)?$')
+                             rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
+                             r'(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(?P<comment>\|\|.*)?$')
         # THIS IS THE WAY
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
                               rf"'\s*(?P<item>{item})\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
                               r"(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?")
         match = re.match(window_bid_format, line.contents, re.IGNORECASE) \
-               or re.match(direct_tell_format, line.contents, re.IGNORECASE)
+            or re.match(direct_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
             player_name = match.group('bidder')
             item_name = match.group('item')
             value = match.group('bid')
             status_flag = match.group('status_flag')
-            is_alt = status_flag is not None and status_flag.lower() in ['alt', 'box']
+            is_alt = status_flag is not None and status_flag.lower() in [
+                'alt', 'box']
             comment = match.group('comment')
             return {'action': 'BID',
                     'item_name': item_name.strip(),
@@ -106,12 +107,11 @@ def auction_bid(line, active_items):
                     'value': int(value),
                     'comment': comment[2:] if comment is not None else '',
                     'status_flag': status_flag,
-                    #'alt': status_flag is not None,
+                    # 'alt': status_flag is not None,
                     'is_second_class_citizen': status_flag is not None,
                     'is_alt': is_alt,
                     'timestamp': line.timestamp()}
     return None
-    
 
 
 def auction_close_match(line):
@@ -146,6 +146,7 @@ def auction_cancel(line):
                 'timestamp': line.timestamp()}
     return None
 
+
 AUCTION_AWARD_RE = ("You tell your raid, "
                     r"'\s*!(correction|tiebreak)\s*!award\s*"
                     r"(?P<item>.*?)\s+"
@@ -177,6 +178,7 @@ def auction_award(line):
                 'timestamp': line.timestamp()}
     return None
 
+
 PREREGISTER_RE = (r"You told (?P<recipient>[a-z]+), "
                   r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
                   r"(?P<status_flag>alt|box)?(?P<comment>\|\|.*)?")
@@ -193,7 +195,8 @@ def preregister(line):
         item_name = search.group('item')
         value = search.group('bid')
         status_flag = search.group('status_flag')
-        is_alt = status_flag is not None and status_flag.lower() in ['alt', 'box']
+        is_alt = status_flag is not None and status_flag.lower() in [
+            'alt', 'box']
         comment = search.group('comment')
         return {'action': 'PREREGISTER',
                 'item_name': item_name.strip(),
@@ -212,6 +215,7 @@ WAITLIST_RE = ("(You tell your|[A-Z][a-z]+ tells the) raid, "
                r"(?P<name>[A-Z][a-z]+)")
 
 JOINED_RAID_RE = r"(?P<name>[A-Z][a-z]+) joined the raid."
+
 
 def waitlist_match(line):
     return re.match(WAITLIST_RE, line.contents, re.IGNORECASE)
@@ -305,4 +309,3 @@ def get_name_from_log_file_path(filepath):
         return name_search.group('my_name')
     else:
         return 'MYSELF'
-

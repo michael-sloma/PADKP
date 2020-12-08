@@ -32,4 +32,3 @@ def time_from_gui_display(string):
 def time_to_django_repr(time):
     """ stringify a datetime so that it's ready to be sent over the wire"""
     return time.strftime('%Y-%m-%dT%H:%M:%S%z')
-
