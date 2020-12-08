@@ -102,4 +102,8 @@ The user interface displays all of the auctions that it sees in your log, with t
 Run Tests
 `python -m pytest`
 
+Build Release
+`build.bat <version-tag>`
+
 Code formatted with autopep8
+
