@@ -252,7 +252,9 @@ class MainPage:
         filename = os.path.join(self.config.get('dump_path'), short_filename)
         try:
             result = api_client.award_dkp_from_dump(
-                filename, award_type, dkp_value, attendance, waitlist, notes, timestamps.pick_nearest_time(dt.datetime.now()), self.api_token)
+                filename, award_type, dkp_value, attendance, waitlist, notes, timestamps.pick_nearest_time(
+                    timestamps.time_from_raid_dump(short_filename)),
+                self.api_token)
         except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
@@ -581,8 +583,8 @@ class AwardDkpWindow:
             row=1, column=1, columnspan=2, sticky=tkinter.E+tkinter.W)
 
         self.time_choice = tkinter.StringVar(self.window)
-        time_choices = timestamps.build_time_choices(
-            timestamps.time_from_raid_dump(short_filename))
+        self.file_time = timestamps.time_from_raid_dump(short_filename)
+        time_choices = timestamps.build_time_choices(self.file_time)
         self.time_choice_menu = tkinter.OptionMenu(
             self.window, self.time_choice, *time_choices)
 
@@ -615,10 +617,12 @@ class AwardDkpWindow:
 
         self.api_token = api_token
 
-    def type_change(self, event):
+    def type_change(self, _event):
         if 'Time' == self.type_choice.get():
             self.time_choice_menu.grid(
                 row=1, column=0)
+            self.time_choice.set(timestamps.time_to_gui_display(
+                timestamps.pick_nearest_time(self.file_time)))
         else:
             self.time_choice_menu.grid_remove()
         pass
