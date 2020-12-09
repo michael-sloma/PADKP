@@ -29,7 +29,29 @@ def time_from_gui_display(string):
     return time.astimezone()
 
 
+def pick_nearest_time(time):
+    """ Generate a time stamp for the nearest 30 minute increment """
+    if time.minute >= 45:
+        time = time.replace(minute=0, second=0, microsecond=0)
+        time = time + dt.timedelta(hours=1)
+    elif time.minute >= 15:
+        time = time.replace(minute=30, second=0, microsecond=0)
+    else:
+        time = time.replace(minute=0, second=0, microsecond=0)
+    return time
+
+
+def build_time_choices(time):
+    """Generate an array of 30 minute seperated times for a 3 hour window starting two hours before provided time"""
+    if time.minute >= 30:
+        time = time.replace(minute=30, second=0, microsecond=0)
+    else:
+        time = time.replace(minute=0, second=0, microsecond=0)
+
+    time = time - dt.timedelta(hours=2)
+    return [time_to_gui_display(time+dt.timedelta(minutes=30*i)) for i in range(6)]
+
+
 def time_to_django_repr(time):
     """ stringify a datetime so that it's ready to be sent over the wire"""
     return time.strftime('%Y-%m-%dT%H:%M:%S%z')
-

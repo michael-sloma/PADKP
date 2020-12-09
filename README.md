@@ -94,5 +94,16 @@ The user interface displays all of the auctions that it sees in your log, with t
 ![](https://i.imgur.com/Sh4Kkqq.png)
 
  You can select an auction and use the "Auction details" option to see the bids for an auction.
- 
+
 ![](https://i.imgur.com/6F07IaF.png)
+
+# Dev Notes
+
+Run Tests
+`python -m pytest`
+
+Build Release
+`build.bat <version-tag>`
+
+Code formatted with autopep8
+

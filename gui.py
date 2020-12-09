@@ -36,27 +36,38 @@ class MainPage:
 
         menu_bar = tkinter.Menu(master)
         file_menu = tkinter.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Open log file (Ctrl-F)", command=self.open_log_file)
-        file_menu.add_command(label="Choose raid dump directory (Ctrl-R)", command=self.choose_raid_dump_dir)
-        file_menu.add_command(label="Enter API token (Ctrl-T)", command=self.ask_api_token)
-        file_menu.add_command(label="Close (Ctrl-Q)", command=self.confirm_quit)
+        file_menu.add_command(label="Open log file (Ctrl-F)",
+                              command=self.open_log_file)
+        file_menu.add_command(
+            label="Choose raid dump directory (Ctrl-R)", command=self.choose_raid_dump_dir)
+        file_menu.add_command(
+            label="Enter API token (Ctrl-T)", command=self.ask_api_token)
+        file_menu.add_command(label="Close (Ctrl-Q)",
+                              command=self.confirm_quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
         auction_menu = tkinter.Menu(menu_bar, tearoff=0)
-        auction_menu.add_command(label="See auction details (Ctrl-D)", command=self.open_details_window)
-        auction_menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
-        auction_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
-        auction_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        auction_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+        auction_menu.add_command(
+            label="See auction details (Ctrl-D)", command=self.open_details_window)
+        auction_menu.add_command(
+            label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        auction_menu.add_command(
+            label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        auction_menu.add_command(
+            label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        auction_menu.add_command(
+            label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
         auction_menu.add_command(label="Tiebreak", command=self.tiebreak)
         menu_bar.add_cascade(label="Auctions", menu=auction_menu)
 
         dkp_menu = tkinter.Menu(menu_bar, tearoff=0)
-        dkp_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        dkp_menu.add_command(label="Award DKP (Ctrl-W)",
+                             command=self.open_award_dkp_window)
         menu_bar.add_cascade(label="Awards", menu=dkp_menu)
 
         waitlist_menu = tkinter.Menu(menu_bar, tearoff=0)
-        waitlist_menu.add_command(label="View waitlist", command=self.open_waitlist_window)
+        waitlist_menu.add_command(
+            label="View waitlist", command=self.open_waitlist_window)
         menu_bar.add_cascade(label="Waitlist", menu=waitlist_menu)
 
         master.config(menu=menu_bar)
@@ -77,29 +88,34 @@ class MainPage:
         self.tree.column('#5', stretch=tkinter.YES)
         self.tree.grid(row=1, columnspan=4, sticky='nsw')
 
-        self.button = tkinter.Button(master, text="Load log file (Ctrl-F)", command=self.open_log_file)
+        self.button = tkinter.Button(
+            master, text="Load log file (Ctrl-F)", command=self.open_log_file)
         self.button.grid(row=2, column=0)
 
         self.button = tkinter.Button(master, text="Auction details (Ctrl-D)",
                                      command=self.open_details_window)
         self.button.grid(row=2, column=1)
 
-        self.button = tkinter.Button(master, text="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        self.button = tkinter.Button(
+            master, text="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
         self.button.grid(row=2, column=2)
 
-        self.button = tkinter.Button(master, text="Close (Ctrl-Q)", command=self.confirm_quit)
+        self.button = tkinter.Button(
+            master, text="Close (Ctrl-Q)", command=self.confirm_quit)
         self.button.grid(row=2, column=3)
 
-        self.status_window = tkinter.Text(master, height= 10, wrap="word")
+        self.status_window = tkinter.Text(master, height=10, wrap="word")
         self.status_window.grid(row=4, columnspan=4, sticky='nsew')
-        self.scroll = tkinter.Scrollbar(master, orient="vertical", command=self.status_window.yview)
+        self.scroll = tkinter.Scrollbar(
+            master, orient="vertical", command=self.status_window.yview)
         self.scroll.grid(row=4, column=4, sticky='nse')
         self.status_window.configure(state='normal')
         self.status_window.configure(yscrollcommand=self.scroll.set)
         self.status_window.see("end")
         self.status_window.configure(state='disabled')
 
-        self.raid_dump_pane = ttk.Treeview(master, columns=['time'], selectmode='browse')
+        self.raid_dump_pane = ttk.Treeview(
+            master, columns=['time'], selectmode='browse')
         self.raid_dump_pane.grid(row=3, column=0, columnspan=4, sticky='ew')
         self.raid_dump_pane.heading('#0', text='dump')
         self.raid_dump_pane.heading('#1', text='time')
@@ -109,7 +125,8 @@ class MainPage:
 
         self.thread = None  # thread to asynchronously read data from the log file
 
-        self.queue = queue.Queue()  # holds actions from the log file that update the state of the world
+        # holds actions from the log file that update the state of the world
+        self.queue = queue.Queue()
         self.state = auction.AuctionState()
 
         def auction_context_menu_popup(event):
@@ -118,25 +135,35 @@ class MainPage:
         self.tree.bind("<Control-Button-1>", auction_context_menu_popup)
         self.tree.bind("<Button-3>", auction_context_menu_popup)
         auction_context_menu = tkinter.Menu(self.frame, tearoff=0)
-        auction_context_menu.add_command(label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
-        auction_context_menu.add_command(label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
-        auction_context_menu.add_command(label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        auction_context_menu.add_command(label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
-        auction_context_menu.add_command(label="Tiebreak", command=self.tiebreak)
+        auction_context_menu.add_command(
+            label="Copy grats message (Ctrl-G)", command=self.copy_grats_message)
+        auction_context_menu.add_command(
+            label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
+        auction_context_menu.add_command(
+            label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
+        auction_context_menu.add_command(
+            label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
+        auction_context_menu.add_command(
+            label="Tiebreak", command=self.tiebreak)
 
         def raid_dump_context_menu_popup(event):
             self.raid_dump_pane.focus()
             raid_dump_context_menu.post(event.x_root, event.y_root)
-        self.raid_dump_pane.bind("<Control-Button-1>", raid_dump_context_menu_popup)
+        self.raid_dump_pane.bind("<Control-Button-1>",
+                                 raid_dump_context_menu_popup)
         self.raid_dump_pane.bind("<Button-3>", raid_dump_context_menu_popup)
         raid_dump_context_menu = tkinter.Menu(self.frame, tearoff=0)
-        raid_dump_context_menu.add_command(label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
-        raid_dump_context_menu.add_command(label="Quick award DKP (Ctrl-Shift-W)", command=self.quick_award_dkp)
-        raid_dump_context_menu.add_command(label="Award CASUAL RAID DKP (Ctrl-Shift-M)", command=self.casual_award_dkp)
+        raid_dump_context_menu.add_command(
+            label="Award DKP (Ctrl-W)", command=self.open_award_dkp_window)
+        raid_dump_context_menu.add_command(
+            label="Quick award DKP (Ctrl-Shift-W)", command=self.quick_award_dkp)
+        raid_dump_context_menu.add_command(
+            label="Award CASUAL RAID DKP (Ctrl-Shift-M)", command=self.casual_award_dkp)
 
         # add keyboard shortcuts
         self.master.bind("<Control-f>", lambda _: self.open_log_file())
-        self.master.bind("<Control-c>", lambda _: self.copy_report_from_selection())
+        self.master.bind(
+            "<Control-c>", lambda _: self.copy_report_from_selection())
         self.master.bind("<Control-C>", lambda _: self.copy_report())
         self.master.bind("<Control-g>", lambda _: self.copy_grats_message())
         self.master.bind("<Control-q>", lambda _: self.confirm_quit())
@@ -144,7 +171,8 @@ class MainPage:
         self.master.bind("<Control-b>", lambda _: self.charge_dkp())
         self.master.bind("<Control-w>", lambda _: self.open_award_dkp_window())
         self.master.bind("<Control-Shift-W>", lambda _: self.quick_award_dkp())
-        self.master.bind("<Control-Shift-M>", lambda _: self.casual_award_dkp())
+        self.master.bind("<Control-Shift-M>",
+                         lambda _: self.casual_award_dkp())
         self.master.bind("<Control-t>", lambda _: self.ask_api_token())
         self.master.bind("<Control-r>", lambda _: self.choose_raid_dump_dir())
 
@@ -160,7 +188,8 @@ class MainPage:
         if 'dump_path' in self.config and os.path.exists(self.config['dump_path']):
             self.show_raid_dumps()
 
-        self.state.update({'action': 'initialize'}) # trigger the various events that happen "on update"
+        # trigger the various events that happen "on update"
+        self.state.update({'action': 'initialize'})
         print("LOADED")
 
     def choose_raid_dump_dir(self, path=None):
@@ -176,11 +205,14 @@ class MainPage:
         path = self.config.get('dump_path')
         if not os.path.exists(path):
             return
-        raid_dump_files = sorted([x for x in os.listdir(path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)])
+        raid_dump_files = sorted([x for x in os.listdir(
+            path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)])
         for rdf in raid_dump_files:
             if rdf not in self.raid_dump_files:
-                display_time = timestamps.time_to_gui_display(timestamps.time_from_raid_dump(rdf))
-                self.raid_dump_pane.insert('', 0, text=rdf, values=[display_time])
+                display_time = timestamps.time_to_gui_display(
+                    timestamps.time_from_raid_dump(rdf))
+                self.raid_dump_pane.insert(
+                    '', 0, text=rdf, values=[display_time])
                 self.raid_dump_files.add(rdf)
         self.master.after(1000, self.show_raid_dumps)
 
@@ -195,8 +227,10 @@ class MainPage:
 
     @prompt_api_token
     def open_award_dkp_window(self):
-        filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
-        AwardDkpWindow(self.master, self.api_token, self.config.get('dump_path'), filename, self.state.waitlist)
+        filename = self.raid_dump_pane.item(
+            self.raid_dump_pane.selection())['text']
+        AwardDkpWindow(self.master, self.api_token, self.config.get(
+            'dump_path'), filename, self.state.waitlist)
 
     def open_waitlist_window(self):
         WaitlistWindow(self.master, self.state)
@@ -213,17 +247,23 @@ class MainPage:
             messagebox.showerror("", "Select a raid dump!")
             return
 
-        short_filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
+        short_filename = self.raid_dump_pane.item(
+            self.raid_dump_pane.selection())['text']
         filename = os.path.join(self.config.get('dump_path'), short_filename)
         try:
-            result = api_client.award_dkp_from_dump(filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
+            result = api_client.award_dkp_from_dump(
+                filename, award_type, dkp_value, attendance, waitlist, notes, timestamps.pick_nearest_time(
+                    timestamps.time_from_raid_dump(short_filename)),
+                self.api_token)
         except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
         if result.status_code == 201:
-            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(dkp_value, short_filename))
+            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(
+                dkp_value, short_filename))
         else:
-            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
+            messagebox.showerror(
+                "", "Server error, no DKP awarded\n\n{}".format(result.text))
 
     @prompt_api_token
     def casual_award_dkp(self):
@@ -237,18 +277,21 @@ class MainPage:
             messagebox.showerror("", "Select a raid dump!")
             return
 
-        short_filename = self.raid_dump_pane.item(self.raid_dump_pane.selection())['text']
+        short_filename = self.raid_dump_pane.item(
+            self.raid_dump_pane.selection())['text']
         filename = os.path.join(self.config.get('dump_path'), short_filename)
         try:
-            result = api_client.award_casual_dkp_from_dump(filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
+            result = api_client.award_casual_dkp_from_dump(
+                filename, award_type, dkp_value, attendance, waitlist, notes, self.api_token)
         except Exception:
             messagebox.showerror("", "Action Failed, no DKP awarded")
             raise
         if result.status_code == 201:
-            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(dkp_value, short_filename))
+            messagebox.showinfo("", "Awarded {} DKP for Time from dump {}".format(
+                dkp_value, short_filename))
         else:
-            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
-
+            messagebox.showerror(
+                "", "Server error, no DKP awarded\n\n{}".format(result.text))
 
     def open_details_window(self):
         iid = self.tree.focus()
@@ -269,7 +312,8 @@ class MainPage:
         iid = self.tree.focus()
         vals = self.tree.item(iid)['values']
         try:
-            message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+            message = '/rs Grats {} on {} for {} dkp'.format(
+                vals[3], vals[0], vals[4])
             self.master.clipboard_clear()
             self.master.clipboard_append(message)
             print(message)
@@ -303,25 +347,32 @@ class MainPage:
             messagebox.showerror('Auction is not tied!')
             return
         winners = [x.strip() for x in vals[3].split(',')]
-        costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
+        costs = [vals[4]] if type(vals[4]) is int else [int(x)
+                                                        for x in vals[4].split(',')]
         name_cost_map = dict(zip(winners, costs))
         lowest_winning_bid = min(costs)
-        tied_characters = [winner for winner, cost in zip(winners, costs) if cost==lowest_winning_bid]
-        non_tied_characters = [winner for winner, cost in zip(winners, costs) if cost>lowest_winning_bid]
+        tied_characters = [winner for winner, cost in zip(
+            winners, costs) if cost == lowest_winning_bid]
+        non_tied_characters = [winner for winner, cost in zip(
+            winners, costs) if cost > lowest_winning_bid]
         n_way_tie = item_count - len(non_tied_characters)
         result = api_client.tiebreak(tied_characters, self.api_token)
         if result.status_code == 200:
             ordering = [name for name, explanation in result.json()]
-            explanations = '\n'.join([explanation for name, explanation in result.json()])
+            explanations = '\n'.join(
+                [explanation for name, explanation in result.json()])
             tiebreak_winners = ordering[:n_way_tie]
-            message = 'Tiebreak winner(s): {}'.format(', '.join(tiebreak_winners)) + '\n\n' + 'Explanation:\n' + explanations
+            message = 'Tiebreak winner(s): {}'.format(
+                ', '.join(tiebreak_winners)) + '\n\n' + 'Explanation:\n' + explanations
             messagebox.showinfo('tiebreak', message)
 
             all_winners = non_tied_characters + tiebreak_winners
             all_costs = [name_cost_map[name] for name in all_winners]
-            new_winner_list = ', '.join(winner + ' ' + str(cost) for winner, cost in zip(all_winners, all_costs))
+            new_winner_list = ', '.join(winner + ' ' + str(cost)
+                                        for winner, cost in zip(all_winners, all_costs))
 
-            correction_message = '!tiebreak !award {} !to {}'.format(item_name, new_winner_list)
+            correction_message = '!tiebreak !award {} !to {}'.format(
+                item_name, new_winner_list)
             self.master.clipboard_clear()
             self.master.clipboard_append(correction_message)
         else:
@@ -344,7 +395,8 @@ class MainPage:
                 continue
             item = vals[0]
             winners = [x.strip() for x in vals[3].split(',')]
-            costs = [vals[4]] if type(vals[4]) is int else [int(x) for x in vals[4].split(',')]
+            costs = [vals[4]] if type(vals[4]) is int else [
+                int(x) for x in vals[4].split(',')]
             time = timestamps.time_from_gui_display(timestamp)
 
             for winner, cost in zip(winners, costs):
@@ -357,7 +409,8 @@ class MainPage:
                                     'token': self.api_token})
         charges_human_readable = ['{} to {} for {}'.format(x['item_name'], x['character'], x['value'])
                                   for x in charges]
-        confirm = messagebox.askyesno('', '\n'.join(charges_human_readable) + "\n\nCharge DKP?")
+        confirm = messagebox.askyesno('', '\n'.join(
+            charges_human_readable) + "\n\nCharge DKP?")
         if confirm:
             for charge, msg in zip(charges, charges_human_readable):
                 result = api_client.charge_dkp(**charge)
@@ -367,7 +420,8 @@ class MainPage:
                     err_msg = '{} could not be charged to {}\nSend Quaff a bug report\n\n{}'\
                         .format(charge['item_name'], charge['character'], result.text)
                     messagebox.showerror('Failed to charge', err_msg)
-                print('charge completed with status code {}'.format(result.status_code))
+                print('charge completed with status code {}'.format(
+                    result.status_code))
 
     def write_report(self):
         filename = filedialog.asksaveasfilename()
@@ -412,7 +466,7 @@ class MainPage:
 
     def update_gui(self):
         while not self.queue.empty():
-            key, action = self.queue.get()
+            _key, action = self.queue.get()
             print('read a piece of data:', action)
             action_result = self.state.update(action)
             self.show_result(action_result)
@@ -429,14 +483,15 @@ class MainPage:
                                                    update_row.price))
             vals = self.tree.item(update_row.iid)['values']
             if update_row.status == 'Concluded':
-                message = '/rs Grats {} on {} for {} dkp'.format(vals[3], vals[0], vals[4])
+                message = '/rs Grats {} on {} for {} dkp'.format(
+                    vals[3], vals[0], vals[4])
                 self.master.clipboard_clear()
                 self.master.clipboard_append(message)
             elif update_row.status == 'Tied':
                 message = '/rs {} tied, hold a moment'.format(vals[3])
                 self.master.clipboard_clear()
                 self.master.clipboard_append(message)
-                
+
         for message in action_result.status_messages:
             self.display_status_message(message)
 
@@ -449,8 +504,8 @@ class MainPage:
 
     def display_status_message(self, msg):
         self.status_window.configure(state='normal')
-        self.status_window.insert('1.0', msg +"\n")
-        #self.status_window.see("end")
+        self.status_window.insert('1.0', msg + "\n")
+        # self.status_window.see("end")
         self.status_window.configure(state='disabled')
 
 
@@ -467,7 +522,9 @@ class DetailsWindow:
         self.tree.heading('#3', text='alt?')
         self.tree.heading('#4', text='comment')
         self.tree.grid()
-        self.close_button = tkinter.Button(self.window, text="Close", command=self.window.destroy).grid()
+        self.close_button = tkinter.Button(
+            self.window, text="Close", command=self.window.destroy)
+        self.close_button.grid()
         self.redraw()
 
     def redraw(self):
@@ -491,7 +548,8 @@ class WaitlistWindow:
         self.tree.heading('#1', text='time')
         self.tree.grid()
         self.close_button = tkinter.Button(self.window, text="Close",
-                                           command=self.window.destroy).grid()
+                                           command=self.window.destroy)
+        self.close_button.grid()
         self.redraw()
 
     def redraw(self):
@@ -514,12 +572,21 @@ class AwardDkpWindow:
         self.window.title('Award DKP')
 
         self.file_label = tkinter.Label(self.window, text=short_filename)
-        self.file_label.grid(row=0, column=0, columnspan=2, sticky=tkinter.E+tkinter.W)
+        self.file_label.grid(row=0, column=0, columnspan=2,
+                             sticky=tkinter.E+tkinter.W)
 
         self.type_choice = tkinter.StringVar(self.window)
         choices = ['Time', "Boss Kill", "Other"]
-        self.type_choice_menu = tkinter.OptionMenu(self.window, self.type_choice, *choices)
-        self.type_choice_menu.grid(row=1, column=1, columnspan=2, sticky=tkinter.E+tkinter.W)
+        self.type_choice_menu = tkinter.OptionMenu(
+            self.window, self.type_choice, *choices, command=lambda event: self.type_change(event))
+        self.type_choice_menu.grid(
+            row=1, column=1, columnspan=2, sticky=tkinter.E+tkinter.W)
+
+        self.time_choice = tkinter.StringVar(self.window)
+        self.file_time = timestamps.time_from_raid_dump(short_filename)
+        time_choices = timestamps.build_time_choices(self.file_time)
+        self.time_choice_menu = tkinter.OptionMenu(
+            self.window, self.time_choice, *time_choices)
 
         self.value_label = tkinter.Label(self.window, text="DKP")
         self.value_entry = tkinter.Entry(self.window)
@@ -527,8 +594,10 @@ class AwardDkpWindow:
         self.value_entry.grid(row=2, column=1, sticky=tkinter.W)
 
         self.attendance_var = tkinter.IntVar(value=1)
-        self.attendance_label = tkinter.Label(self.window, text="Counts for attendance?")
-        self.attendance_entry = tkinter.Checkbutton(self.window, variable=self.attendance_var)
+        self.attendance_label = tkinter.Label(
+            self.window, text="Counts for attendance?")
+        self.attendance_entry = tkinter.Checkbutton(
+            self.window, variable=self.attendance_var)
         self.attendance_label.grid(row=3, column=0, sticky=tkinter.W)
         self.attendance_entry.grid(row=3, column=1, sticky=tkinter.W)
 
@@ -537,14 +606,26 @@ class AwardDkpWindow:
         self.notes_label.grid(row=4, column=0, sticky=tkinter.W)
         self.notes_entry.grid(row=4, column=1, sticky=tkinter.W)
 
-        self.award_button = tkinter.Button(self.window, text="Award DKP", command=self.award_dkp)
-        self.close_button = tkinter.Button(self.window, text="Cancel", command=self.window.destroy)
-        self.award_button.grid(row=5, column=0)
+        self.award_button = tkinter.Button(
+            self.window, text="Award DKP", command=self.award_dkp)
+        self.close_button = tkinter.Button(
+            self.window, text="Cancel", command=self.window.destroy)
+        self.award_button.grid(row=6, column=1)
         self.close_button.grid(row=6, column=0)
 
         self.waitlist = list(waitlist)
 
         self.api_token = api_token
+
+    def type_change(self, _event):
+        if 'Time' == self.type_choice.get():
+            self.time_choice_menu.grid(
+                row=1, column=0)
+            self.time_choice.set(timestamps.time_to_gui_display(
+                timestamps.pick_nearest_time(self.file_time)))
+        else:
+            self.time_choice_menu.grid_remove()
+        pass
 
     def award_dkp(self):
         try:
@@ -556,13 +637,25 @@ class AwardDkpWindow:
         if not self.type_choice.get():
             messagebox.showerror("", "Must choose time, boss kill, or other")
             return
+
         try:
+            timestamp = None
+
+            if 'Time' == self.type_choice.get():
+                if not self.time_choice.get():
+                    messagebox.showerror(
+                        "", "Must choose a time slot for Time award")
+                    return
+                timestamp = timestamps.time_from_gui_display(
+                    self.time_choice.get())
+
             result = api_client.award_dkp_from_dump(self.filename,
                                                     self.type_choice.get(),
                                                     value,
                                                     self.attendance_var.get(),
                                                     self.waitlist,
                                                     self.notes_entry.get(),
+                                                    timestamp,
                                                     self.api_token
                                                     )
             print(result)
@@ -573,13 +666,15 @@ class AwardDkpWindow:
             messagebox.showinfo("", "DKP awarded")
             self.window.destroy()
         else:
-            messagebox.showerror("", "Server error, no DKP awarded\n\n{}".format(result.text))
+            messagebox.showerror(
+                "", "Server error, no DKP awarded\n\n{}".format(result.text))
 
 
 class AsyncioThread(threading.Thread):
     """ Asynchronously read lines from the log file, interpret them, and stick
     the resulting "action directives" in a queue that's shared between the gui
     and the thread """
+
     def __init__(self, queue, file_obj=None, max_data=5):
         self.asyncio_loop = asyncio.get_event_loop()
         self.queue = queue
@@ -624,11 +719,9 @@ class AsyncioThread(threading.Thread):
 def main():
     root = tkinter.Tk()
     root.title('Phoenix Ascended Auction Manager')
-    d = MainPage(root)
+    MainPage(root)
     root.mainloop()
 
 
 if __name__ == '__main__':
     main()
-
-
