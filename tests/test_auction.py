@@ -32,9 +32,11 @@ def test_whole_auction_case_2():
         "[Wed Jun 12 23:07:33 2019] You tell your raid, '!Bids closed Green Dragon Scale'",
     ]
     for line in lines:
-        action = parse.handle_line(line, set(['Cloak of Flames', 'Green Dragon Scale']))
+        action = parse.handle_line(
+            line, set(['Cloak of Flames', 'Green Dragon Scale']))
         auc.update(action)
-    assert len(auc.concluded_auctions) == 0  # bids are tied, auction wasn't completed
+    # bids are tied, auction wasn't completed
+    assert len(auc.concluded_auctions) == 0
     tied_auction = list(auc.active_auctions.values())[0]
     assert tied_auction['item'] == 'Green Dragon Scale'
     assert len(tied_auction['bids']) == 4
@@ -92,9 +94,11 @@ def test_whole_auction_case_5():
         "[Wed Jun 12 23:07:33 2019] You tell your raid, '!Bids closed Green Dragon Scale'",
     ]
     for line in lines:
-        action = parse.handle_line(line, set(['Cloak of Flames', 'Green Dragon Scale']))
+        action = parse.handle_line(
+            line, set(['Cloak of Flames', 'Green Dragon Scale']))
         auc.update(action)
-    assert len(auc.concluded_auctions) == 1  # bids are tied, auction wasn't completed
+    # bids are tied, auction wasn't completed
+    assert len(auc.concluded_auctions) == 1
 
 
 def test_failed_bid_case():
@@ -159,5 +163,3 @@ def test_sort_bids_2():
     # the alt is totally frozen out because the bid was 6 or higher
     # the FNF beats the main because the main did not bid 11 or higher
     assert ordering == ['Frank', 'Mandy', 'Adam']
-
-

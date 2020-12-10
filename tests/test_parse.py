@@ -2,6 +2,7 @@ import pytest
 import parse
 import re
 
+
 def test_log_line_timestamp():
     test_line = "[Wed Jun 12 22:49:34 2019] Foobar tells the raid,  'Ha ha ha!'"
     timestamp = parse.LogLine(test_line).timestamp()
@@ -14,7 +15,7 @@ def test_log_line_timestamp():
 
 
 auction_tell_windows = \
-"""[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate'
+    """[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate'
 [Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Singing Steel Breastplate 10
 [Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55
 [Wed Jun 12 23:07:49 2019] Playerthree -> Quaff: Singing Steel Breastplate 20
@@ -29,7 +30,7 @@ AUCTION_OPEN_WITH_WHITESPACE_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid,
 AUCTION_OPEN_WITH_WHITESPACE_3 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate  || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_4 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids         open Singing Steel Breastplate  || TELLS TO ME'"
 AUCTION_OPEN_DOUBLE = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate !2 || THERE ARE TWO'"
-AUCTION_OPEN_DOUBLE_2= "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open !2 Singing Steel Breastplate  || THERE ARE TWO'"
+AUCTION_OPEN_DOUBLE_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open !2 Singing Steel Breastplate  || THERE ARE TWO'"
 
 BID_TELL_WINDOW = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55"
 BID_TELL_WINDOW_2 = "[Wed Jun 12 23:07:49 2019] Playertwo -> Quaff: Singing Steel Breastplate 55 "
@@ -64,16 +65,17 @@ FAILED_BID = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'I like apples'"
 
 DEFAULT_ITEMS = set(['Singing Steel Breastplate'])
 
+
 @pytest.mark.parametrize('comment, bids_open_message',
-    [('regular message', AUCTION_OPEN),
-     ('comment message', AUCTION_OPEN_WITH_COMMENT),
-     ('comment message', AUCTION_OPEN_WITH_COMMENT_2),
-     ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_1),
-     ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_2),
-     ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_3),
-     ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_4),
-     ]
-)
+                         [('regular message', AUCTION_OPEN),
+                          ('comment message', AUCTION_OPEN_WITH_COMMENT),
+                             ('comment message', AUCTION_OPEN_WITH_COMMENT_2),
+                             ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_1),
+                             ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_2),
+                             ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_3),
+                             ('whitespace', AUCTION_OPEN_WITH_WHITESPACE_4),
+                          ]
+                         )
 def test_auction_open(comment, bids_open_message):
     input_line = parse.LogLine(bids_open_message)
     result = parse.auction_start(input_line)
@@ -81,18 +83,18 @@ def test_auction_open(comment, bids_open_message):
 
 
 @pytest.mark.parametrize('comment, bid_message',
-     [('regular message', BID_TELL_WINDOW),
-      ('whitespace', BID_TELL_WINDOW_2),
-      ('whitespace', BID_TELL_WINDOW_3),
-      ('whitespace', BID_TELL_WINDOW_4),
-      ('comment', BID_TELL_WINDOW_COMMENT),
-      ('has "dkp" in it', BID_TELL_WINDOW_DKP),
-      ('alt', BID_TELL_WINDOW_ALT_1),
-      ('alt', BID_TELL_WINDOW_ALT_2),
-      ('box', BID_TELL_WINDOW_ALT_3),
-      ('no space before bid', BID_TELL_WINDOW_NO_SPACE),
-      ]
-)
+                         [('regular message', BID_TELL_WINDOW),
+                          ('whitespace', BID_TELL_WINDOW_2),
+                             ('whitespace', BID_TELL_WINDOW_3),
+                             ('whitespace', BID_TELL_WINDOW_4),
+                             ('comment', BID_TELL_WINDOW_COMMENT),
+                             ('has "dkp" in it', BID_TELL_WINDOW_DKP),
+                             ('alt', BID_TELL_WINDOW_ALT_1),
+                             ('alt', BID_TELL_WINDOW_ALT_2),
+                             ('box', BID_TELL_WINDOW_ALT_3),
+                             ('no space before bid', BID_TELL_WINDOW_NO_SPACE),
+                          ]
+                         )
 def test_auction_bid_tell_window(comment, bid_message):
     input_line = parse.LogLine(bid_message)
     result = parse.auction_bid(input_line, DEFAULT_ITEMS)
@@ -102,19 +104,20 @@ def test_auction_bid_tell_window(comment, bid_message):
     assert result['value'] == 55
     assert result['action'] == 'BID'
 
+
 @pytest.mark.parametrize('comment, bid_message',
-     [('regular message', BID_TELL),
-      ('whitespace', BID_TELL_2),
-      ('whitespace', BID_TELL_3),
-      ('whitespace', BID_TELL_4),
-      ('comment', BID_TELL_COMMENT),
-      ('has "dkp" in it', BID_TELL_DKP),
-      ('alt', BID_TELL_ALT_1),
-      ('alt', BID_TELL_ALT_2),
-      ('box', BID_TELL_ALT_3),
-      ('no space before bid', BID_TELL_NO_SPACE),
-      ]
-)
+                         [('regular message', BID_TELL),
+                          ('whitespace', BID_TELL_2),
+                             ('whitespace', BID_TELL_3),
+                             ('whitespace', BID_TELL_4),
+                             ('comment', BID_TELL_COMMENT),
+                             ('has "dkp" in it', BID_TELL_DKP),
+                             ('alt', BID_TELL_ALT_1),
+                             ('alt', BID_TELL_ALT_2),
+                             ('box', BID_TELL_ALT_3),
+                             ('no space before bid', BID_TELL_NO_SPACE),
+                          ]
+                         )
 def test_auction_bid_tell(comment, bid_message):
     input_line = parse.LogLine(bid_message)
     result = parse.auction_bid(input_line, DEFAULT_ITEMS)
@@ -124,14 +127,17 @@ def test_auction_bid_tell(comment, bid_message):
     assert result['value'] == 55
     assert result['action'] == 'BID'
 
+
 def test_failed_bid():
     result = parse.handle_line(FAILED_BID, DEFAULT_ITEMS)
     assert result is not None
     assert result['action'] == 'FAILED_BID'
 
+
 def test_failed_bid_outside_auctions():
     result = parse.handle_line(FAILED_BID, set())
     assert result is None
+
 
 @pytest.mark.parametrize('comment, bid_message, expect_alt',
                          [('regular message', BID_TELL_WINDOW, False),
@@ -149,13 +155,15 @@ def test_auction_bid_alt(comment, bid_message, expect_alt):
 
 
 @pytest.mark.parametrize('comment, bids_closed_message',
-    [('regular message', BIDS_CLOSED),
-     ('comment message', BIDS_CLOSED_WITH_COMMENT),
-     ('whitespace after', BIDS_CLOSED_WITH_ONE_WHITESPACE_AFTER),
-     ('whitespace after', BIDS_CLOSED_WITH_TWO_WHITESPACE_AFTER),
-     ('whitespace before', BIDS_CLOSED_WITH_WHITESPACE_BEFORE)
-    ]
-)
+                         [('regular message', BIDS_CLOSED),
+                          ('comment message', BIDS_CLOSED_WITH_COMMENT),
+                             ('whitespace after',
+                              BIDS_CLOSED_WITH_ONE_WHITESPACE_AFTER),
+                             ('whitespace after',
+                              BIDS_CLOSED_WITH_TWO_WHITESPACE_AFTER),
+                             ('whitespace before', BIDS_CLOSED_WITH_WHITESPACE_BEFORE)
+                          ]
+                         )
 def test_auction_award(comment, bids_closed_message):
     input_line = parse.LogLine(bids_closed_message)
     result = parse.auction_close(input_line)
@@ -178,20 +186,24 @@ def test_auction_start_count():
 
 
 def test_auction_award():
-    line = parse.LogLine("[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100'")
+    line = parse.LogLine(
+        "[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100'")
     result = parse.auction_award(line)
     assert result['winners'] == ['Lyfeless']
     assert result['bids'] == ['100']
 
+
 def test_auction_award_2():
-    line = parse.LogLine("[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100, Quaff 50'")
+    line = parse.LogLine(
+        "[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100, Quaff 50'")
     result = parse.auction_award(line)
     assert result['winners'] == ['Lyfeless', 'Quaff']
     assert result['bids'] == ['100', '50']
 
 
 def test_auction_award_3():
-    line = parse.LogLine("[Wed Jun 23 23:24:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Baz 30'")
+    line = parse.LogLine(
+        "[Wed Jun 23 23:24:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Baz 30'")
     result = parse.auction_award(line)
     assert result['winners'] == ['Baz']
     assert result['bids'] == ['30']
@@ -199,6 +211,8 @@ def test_auction_award_3():
 
 PREGISTER = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 '"
 PREREGISTER_ALT = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 box'"
+
+
 def test_preregister():
     line = parse.LogLine(PREGISTER)
     assert parse.preregister_match(line)
@@ -222,8 +236,9 @@ def test_preregister_alt():
     assert result['status_flag'] == 'box'
 
 
-
 WAITLIST_ADD = "[Wed Jun 12 23:07:49 2019] You tell your raid, '!waitlist add Foobar'"
+
+
 def test_waitlist():
     line = parse.LogLine(WAITLIST_ADD)
     assert parse.waitlist_match(line)

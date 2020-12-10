@@ -24,12 +24,13 @@ def charge_dkp(character, item_name, value, time, notes, token):
     return requests.post('http://{}/api/charge_dkp/'.format(API_ROOT), json=request, headers=get_headers(token))
 
 
-def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, waitlist, notes, token):
+def award_dkp_from_dump(filepath, reason, value, counts_for_attendance, waitlist, notes, timestamp, token):
     filename = os.path.split(filepath)[-1]
     dump_contents = open(filepath).read()
+    if timestamp is None:
+        timestamp = timestamps.time_from_raid_dump(filename)
 
-    time = timestamps.time_from_raid_dump(filename)
-    time_s = timestamps.time_to_django_repr(time)
+    time_s = timestamps.time_to_django_repr(timestamp)
 
     request = {"filename": filename,
                "dump_contents": dump_contents,
@@ -63,13 +64,15 @@ def award_casual_dkp_from_dump(filepath, reason, value, counts_for_attendance, w
 
 
 def create_character(name, character_class, status, token):
-    request = {'name': name, 'status': status, 'character_class': character_class}
+    request = {'name': name, 'status': status,
+               'character_class': character_class}
     return requests.post('http://{}/api/characters/'.format(API_ROOT), json=request, headers=get_headers(token))
 
 
 def award_dkp(character, value, attendance_value, notes, token):
     time = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    request = {'character': character, 'value': value, 'attendance_value': attendance_value, 'time': time, 'notes': notes}
+    request = {'character': character, 'value': value,
+               'attendance_value': attendance_value, 'time': time, 'notes': notes}
     return requests.post('http://{}/api/awards/'.format(API_ROOT), json=request, headers=get_headers(token))
 
 
