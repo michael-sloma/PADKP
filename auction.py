@@ -62,13 +62,15 @@ class AuctionState:
         elif action['action'] == 'BID':
             item = action['item_name']
             player = action['player_name']
+            if action['is_alt']:
+                player += "'s alt"
             tier = _calculate_bid_tier(action['value'], action['status_flag'], action['is_alt'])
             bid = {'value': action['value'],
                    'comment': action['comment'],
                    'is_alt': action['is_alt'],
                    'status_flag': action['status_flag'],
                    'is_second_class_citizen': action['status_flag'] is not None,
-                   'player': action['player_name'],
+                   'player': player,
                    'tier': tier,
                    'cmp': (tier, action['value'])
                    }

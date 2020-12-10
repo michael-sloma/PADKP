@@ -1,3 +1,6 @@
+1.4.2
+*   Display alt bids as "soandso's alt"
+
 1.4.1
 *   Fixed an issue where auctions with alt bids could be incorrectly reported as being tied.
 

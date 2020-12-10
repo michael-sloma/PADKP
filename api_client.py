@@ -11,12 +11,15 @@ def get_headers(token):
 
 
 def charge_dkp(character, item_name, value, time, notes, token):
+    is_alt = "'s alt" in character
+    main_character = character.replace("'s alt", '')
     request = {
-        "character": character,
+        "character": main_character,
         "item_name": item_name,
         "value": value,
         "time": str(time),
-        "notes": notes
+        "notes": notes,
+        "is_alt": is_alt,
     }
     return requests.post('http://{}/api/charge_dkp/'.format(API_ROOT), json=request, headers=get_headers(token))
 
