@@ -50,7 +50,7 @@ BID_TELL_4 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, ' Singing Steel Br
 BID_TELL_NO_SPACE = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate55"
 BID_TELL_COMMENT = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 || I can\'t even use it lol'"
 BID_TELL_DKP = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55dkp '"
-BID_TELL_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 alt'"
+BID_TELL_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55  alt'"
 BID_TELL_ALT_2 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 ALT'"
 BID_TELL_ALT_3 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 box'"
 
@@ -97,7 +97,7 @@ def test_auction_open(comment, bids_open_message):
                          )
 def test_auction_bid_tell_window(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -120,7 +120,7 @@ def test_auction_bid_tell_window(comment, bid_message):
                          )
 def test_auction_bid_tell(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -149,7 +149,7 @@ def test_failed_bid_outside_auctions():
 def test_auction_bid_alt(comment, bid_message, expect_alt):
     """ check that we correctly interpret an alt message"""
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
     assert result is not None
     assert result['is_alt'] == expect_alt
 

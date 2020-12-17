@@ -85,32 +85,38 @@ def auction_bid(line, active_items):
     for item in active_items:
         # DEPRECATED
         window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
-                             rf'(?P<item>{item})\s*(?P<bid>[0-9]+)\s*'
-                             r'(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(?P<comment>\|\|.*)?$')
+                             rf'(?P<item>{item})\s*([0-9]+)\s*'
+                             r'(dkp)?\s*(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(\|\|.*)?$')
         # THIS IS THE WAY
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
-                              rf"'\s*(?P<item>{item})\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
-                              r"(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?")
+                              rf"'\s*(?P<item>{item})\s*([0-9]+)\s*(dkp)?\s*"
+                              r"(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(\|\|.*)?")
+        bid_section_format = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
         match = re.match(window_bid_format, line.contents, re.IGNORECASE) \
             or re.match(direct_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
             player_name = match.group('bidder')
             item_name = match.group('item')
-            value = match.group('bid')
-            status_flag = match.group('status_flag')
-            is_alt = status_flag is not None and status_flag.lower() in [
-                'alt', 'box']
-            comment = match.group('comment')
-            return {'action': 'BID',
-                    'item_name': item_name.strip(),
-                    'player_name': player_name,
-                    'value': int(value),
-                    'comment': comment[2:] if comment is not None else '',
-                    'status_flag': status_flag,
-                    # 'alt': status_flag is not None,
-                    'is_second_class_citizen': status_flag is not None,
-                    'is_alt': is_alt,
-                    'timestamp': line.timestamp()}
+            actions = []
+            for bid_section in line.contents.split(item)[1].split(","):
+                bid_match = re.match(bid_section_format,
+                                     bid_section, re.IGNORECASE)
+                value = bid_match.group('bid')
+                status_flag = bid_match.group('status_flag')
+                is_alt = status_flag is not None and status_flag.lower() in [
+                    'alt', 'box']
+                comment = bid_match.group('comment')
+                actions.append({'action': 'BID',
+                                'item_name': item_name.strip(),
+                                'player_name': player_name,
+                                'value': int(value),
+                                'comment': comment[2:] if comment is not None else '',
+                                'status_flag': status_flag,
+                                # 'alt': status_flag is not None,
+                                'is_second_class_citizen': status_flag is not None,
+                                'is_alt': is_alt,
+                                'timestamp': line.timestamp()})
+            return actions
     return None
 
 

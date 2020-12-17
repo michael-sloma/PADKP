@@ -10,6 +10,7 @@ class AuctionState:
         self.preregistered_bids = {}
         self.concluded_auctions = []
         self.my_name = my_name
+        self.alt_name = my_name + "'s alt"
         self.waitlist = {}
 
     def update(self, action):
@@ -47,12 +48,13 @@ class AuctionState:
                 pre_bid = self.preregistered_bids[item]
                 tier = _calculate_bid_tier(
                     pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
+                name = self.alt_name if pre_bid['is_alt'] else self.my_name
                 bid = {'value': pre_bid['value'],
                        'comment': pre_bid['comment'],
                        'is_alt': pre_bid['is_alt'],
                        'status_flag': pre_bid['status_flag'],
                        'is_second_class_citizen': pre_bid['status_flag'] is not None,
-                       'player': self.my_name,
+                       'player': name,
                        'tier': tier,
                        'cmp': (tier, pre_bid['value'])
                        }

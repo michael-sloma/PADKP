@@ -700,14 +700,17 @@ class AsyncioThread(threading.Thread):
                 await asyncio.sleep(1)
             else:
                 try:
-                    action = parse.handle_line(line, self.active_items)
-                    if action is not None:
+                    actions = parse.handle_line(line, self.active_items)
+                    if actions is not None:
+                        if not isinstance(actions, list):
+                            actions = [actions]
                         print('enqueued a line', line)
-                        self.queue.put(('', action))
-                        if action['action'] in ('AUCTION_START', 'SUICIDE_START'):
-                            self.active_items.add(action['item_name'])
-                        if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
-                            self.active_items.discard(action['item_name'])
+                        for action in actions:
+                            self.queue.put(('', action))
+                            if action['action'] in ('AUCTION_START', 'SUICIDE_START'):
+                                self.active_items.add(action['item_name'])
+                            if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
+                                self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')
                     print('LINE', line)
