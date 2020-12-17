@@ -64,4 +64,6 @@ def test_time_choices():
                             hour=21, minute=15, second=5, microsecond=2205)
     time_choices = timestamps.build_time_choices(test_time)
     assert time_choices == ['Jan 01 2020, 07:00 PM', 'Jan 01 2020, 07:30 PM', 'Jan 01 2020, 08:00 PM',
-                            'Jan 01 2020, 08:30 PM', 'Jan 01 2020, 09:00 PM', 'Jan 01 2020, 09:30 PM']
+                            'Jan 01 2020, 08:30 PM', 'Jan 01 2020, 09:00 PM', 'Jan 01 2020, 09:30 PM',
+                            'Jan 01 2020, 10:00 PM', 'Jan 01 2020, 10:30 PM', 'Jan 01 2020, 11:00 PM',
+                            'Jan 01 2020, 11:30 PM']

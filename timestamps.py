@@ -49,7 +49,7 @@ def build_time_choices(time):
         time = time.replace(minute=0, second=0, microsecond=0)
 
     time = time - dt.timedelta(hours=2)
-    return [time_to_gui_display(time+dt.timedelta(minutes=30*i)) for i in range(6)]
+    return [time_to_gui_display(time+dt.timedelta(minutes=30*i)) for i in range(10)]
 
 
 def time_to_django_repr(time):
