@@ -20,7 +20,7 @@ def test_whole_auction_case_1():
             auc.update(action)
     finished_auction = auc.concluded_auctions[0]
     assert finished_auction['item'] == 'Cloak of Flames'
-    assert len(finished_auction['bids']) == 2
+    assert len(finished_auction['bids']) == 4
 
 
 def test_whole_auction_case_2():
@@ -45,7 +45,7 @@ def test_whole_auction_case_2():
     assert len(auc.concluded_auctions) == 0
     tied_auction = list(auc.active_auctions.values())[0]
     assert tied_auction['item'] == 'Green Dragon Scale'
-    assert len(tied_auction['bids']) == 4
+    assert len(tied_auction['bids']) == 8
 
 
 def test_whole_auction_case_3():
@@ -152,7 +152,7 @@ def test_preregister_bid():
             update = auc.update(action)
     finished_auction = auc.concluded_auctions[0]
     assert finished_auction['item'] == 'Cloak of Flames'
-    assert len(finished_auction['bids']) == 3
+    assert len(finished_auction['bids']) == 6
     assert update.update_rows[0].winner == 'Tester'
     assert update.update_rows[0].price == '20'
 
@@ -175,38 +175,65 @@ def test_preregister_bid_alt():
             update = auc.update(action)
     finished_auction = auc.concluded_auctions[0]
     assert finished_auction['item'] == 'Cloak of Flames'
-    assert len(finished_auction['bids']) == 3
+    assert len(finished_auction['bids']) == 6
     assert update.update_rows[0].winner == "Tester's alt"
     assert update.update_rows[0].price == '20'
 
 
-# def test_whole_auction_multibid_case_1():
-#     auc = auction.AuctionState("Tester")
-#     lines = [
-#         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
-#         "[Wed Jun 12 23:07:49 2019] Foobar -> Quaff: Cloak of Flames  10",
-#         "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  10",
-#         "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  11, 15 alt",
-#         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
-#     ]
-#     for line in lines:
-#         # we assume that every action was parsed properly. parse failures will cause a type error here
-#         actions = parse.handle_line(line, set(['Cloak of Flames']))
-#         if not isinstance(actions, list):
-#             actions = [actions]
-#         for action in actions:
-#             auc.update(action)
-#     finished_auction = auc.concluded_auctions[0]
-#     assert finished_auction['item'] == 'Cloak of Flames'
-#     assert len(finished_auction['bids']) == 2
+def test_whole_auction_multibid_case_1():
+    auc = auction.AuctionState("Tester")
+    lines = [
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
+        "[Wed Jun 12 23:07:49 2019] Foobar -> Quaff: Cloak of Flames  10",
+        "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  10",
+        "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  11, 15 alt",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
+    ]
+    for line in lines:
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        actions = parse.handle_line(line, set(['Cloak of Flames']))
+        if not isinstance(actions, list):
+            actions = [actions]
+        for action in actions:
+            update = auc.update(action)
+    finished_auction = auc.concluded_auctions[0]
+    assert finished_auction['item'] == 'Cloak of Flames'
+    assert len(finished_auction['bids']) == 4
+    assert update.update_rows[0].winner == "Playerone"
+    assert update.update_rows[0].price == '11'
+
+
+def test_whole_auction_multibid_case_2():
+    auc = auction.AuctionState("Tester")
+    lines = [
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames !2'",
+        "[Wed Jun 12 23:07:49 2019] Foobar -> Quaff: Cloak of Flames  5",
+        "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  10",
+        "[Wed Jun 12 23:07:49 2019] Playerone -> Quaff: Cloak of Flames  11, 15 alt",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
+    ]
+    for line in lines:
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        actions = parse.handle_line(line, set(['Cloak of Flames']))
+        if not isinstance(actions, list):
+            actions = [actions]
+        for action in actions:
+            update = auc.update(action)
+    finished_auction = auc.concluded_auctions[0]
+    assert finished_auction['item'] == 'Cloak of Flames'
+    assert len(finished_auction['bids']) == 4
+    assert update.update_rows[0].winner == "Playerone, Playerone's alt"
+    assert update.update_rows[0].price == '11, 15'
 
 
 def test_sort_bids_1():
-    bids = {'Adam': {'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
-            'Mandy': {'player': 'Mandy', 'value': 6, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (1, 6)},
-            'Mike': {'player': 'Mike', 'value': 5, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (0, 5)}
-            }
-    sorted = auction.sort_bids(bids.values())
+    bids = [{'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
+            {'player': 'Mandy', 'value': 6, 'comment': '',
+             'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (1, 6)},
+            {'player': 'Mike', 'value': 5, 'comment': '',
+             'status_flag': None, 'is_alt': False, 'tier': 0, 'cmp': (0, 5)}
+            ]
+    sorted = auction.sort_bids(bids)
     print(sorted)
     ordering = [x['player'] for x in sorted]
 
@@ -216,11 +243,13 @@ def test_sort_bids_1():
 
 
 def test_sort_bids_2():
-    bids = {'Adam': {'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
-            'Frank': {'player': 'Frank', 'value': 11, 'comment': '', 'status_flag': 'fnf', 'is_alt': False, 'tier': 1, 'cmp': (1, 11)},
-            'Mandy': {'player': 'Mandy', 'value': 10, 'comment': '', 'status_flag': None, 'is_alt': False, 'tier': 1, 'cmp': (1, 10)}
-            }
-    sorted = auction.sort_bids(bids.values())
+    bids = [{'player': 'Adam', 'value': 100, 'comment': '', 'status_flag': 'alt', 'is_alt': True, 'tier': 0, 'cmp': (0, 100)},
+            {'player': 'Frank', 'value': 11, 'comment': '',
+                'status_flag': 'fnf', 'is_alt': False, 'tier': 1, 'cmp': (1, 11)},
+            {'player': 'Mandy', 'value': 10, 'comment': '',
+                'status_flag': None, 'is_alt': False, 'tier': 1, 'cmp': (1, 10)}
+            ]
+    sorted = auction.sort_bids(bids)
     print(sorted)
     ordering = [x['player'] for x in sorted]
 

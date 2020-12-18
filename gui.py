@@ -306,6 +306,7 @@ class MainPage:
             f = open(filename)
             self.load_data_from_log_file(f)
             self.state.my_name = parse.get_name_from_log_file_path(filename)
+            self.state.alt_name = self.state.my_name + "'s alt"
             self.config['log_file'] = filename
 
     def copy_grats_message(self):

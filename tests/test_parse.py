@@ -97,7 +97,7 @@ def test_auction_open(comment, bids_open_message):
                          )
 def test_auction_bid_tell_window(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[1]
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -120,7 +120,7 @@ def test_auction_bid_tell_window(comment, bid_message):
                          )
 def test_auction_bid_tell(comment, bid_message):
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[1]
     assert result is not None
     assert result['item_name'] == 'Singing Steel Breastplate'
     assert result['player_name'] == 'Playertwo'
@@ -149,7 +149,7 @@ def test_failed_bid_outside_auctions():
 def test_auction_bid_alt(comment, bid_message, expect_alt):
     """ check that we correctly interpret an alt message"""
     input_line = parse.LogLine(bid_message)
-    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[0]
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[1]
     assert result is not None
     assert result['is_alt'] == expect_alt
 
@@ -217,23 +217,29 @@ def test_preregister():
     line = parse.LogLine(PREGISTER)
     assert parse.preregister_match(line)
     result = parse.preregister(line)
-    assert result
-    assert result['action'] == 'PREREGISTER'
-    assert result['item_name'] == 'Singing Steel Breastplate'
-    assert result['value'] == 55
-    assert not result['is_alt']
+    reset = result[0]
+    bid = result[1]
+
+    assert reset['action'] == 'PREREGISTER-RESET'
+    assert bid['action'] == 'PREREGISTER'
+    assert bid['item_name'] == 'Singing Steel Breastplate'
+    assert bid['value'] == 55
+    assert not bid['is_alt']
 
 
 def test_preregister_alt():
     line = parse.LogLine(PREREGISTER_ALT)
     assert parse.preregister_match(line)
     result = parse.preregister(line)
-    assert result
-    assert result['action'] == 'PREREGISTER'
-    assert result['item_name'] == 'Singing Steel Breastplate'
-    assert result['value'] == 55
-    assert result['is_alt']
-    assert result['status_flag'] == 'box'
+    reset = result[0]
+    bid = result[1]
+
+    assert reset['action'] == 'PREREGISTER-RESET'
+    assert bid['action'] == 'PREREGISTER'
+    assert bid['item_name'] == 'Singing Steel Breastplate'
+    assert bid['value'] == 55
+    assert bid['is_alt']
+    assert bid['status_flag'] == 'box'
 
 
 WAITLIST_ADD = "[Wed Jun 12 23:07:49 2019] You tell your raid, '!waitlist add Foobar'"

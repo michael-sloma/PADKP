@@ -81,25 +81,32 @@ def auction_start(line):
     return None
 
 
+BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
+
+
 def auction_bid(line, active_items):
     for item in active_items:
         # DEPRECATED
         window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
                              rf'(?P<item>{item})\s*([0-9]+)\s*'
-                             r'(dkp)?\s*(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(\|\|.*)?$')
+                             r'(dkp)?\s*(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(\|\|.*)?')
         # THIS IS THE WAY
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
                               rf"'\s*(?P<item>{item})\s*([0-9]+)\s*(dkp)?\s*"
                               r"(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(\|\|.*)?")
-        bid_section_format = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
+
         match = re.match(window_bid_format, line.contents, re.IGNORECASE) \
             or re.match(direct_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
             player_name = match.group('bidder')
             item_name = match.group('item')
-            actions = []
+            actions = [
+                {'action': 'RESET',
+                 'item_name': item_name.strip(),
+                 'player_name': player_name,
+                 'timestamp': line.timestamp()}]
             for bid_section in line.contents.split(item)[1].split(","):
-                bid_match = re.match(bid_section_format,
+                bid_match = re.match(BID_SECTION_RE,
                                      bid_section, re.IGNORECASE)
                 value = bid_match.group('bid')
                 status_flag = bid_match.group('status_flag')
@@ -199,17 +206,25 @@ def preregister(line):
     if search:
         recipient = search.group('recipient')
         item_name = search.group('item')
-        value = search.group('bid')
-        status_flag = search.group('status_flag')
-        comment = search.group('comment')
-        return {'action': 'PREREGISTER',
-                'item_name': item_name.strip(),
-                'recipient': recipient,
-                'value': int(value),
-                'comment': comment[2:] if comment is not None else '',
-                'status_flag': status_flag,
-                'is_alt': status_flag is not None,
-                'timestamp': line.timestamp()}
+        actions = [
+            {'action': 'PREREGISTER-RESET',
+             'item_name': item_name.strip(),
+             'recipient': recipient,
+             'timestamp': line.timestamp()}]
+        for bid_section in line.contents.split(item_name)[1].split(","):
+            bid_match = re.match(BID_SECTION_RE, bid_section, re.IGNORECASE)
+            value = bid_match.group('bid')
+            status_flag = bid_match.group('status_flag')
+            comment = bid_match.group('comment')
+            actions.append({'action': 'PREREGISTER',
+                            'item_name': item_name.strip(),
+                            'recipient': recipient,
+                            'value': int(value),
+                            'comment': comment[2:] if comment is not None else '',
+                            'status_flag': status_flag,
+                            'is_alt': status_flag is not None,
+                            'timestamp': line.timestamp()})
+        return actions
     return None
 
 

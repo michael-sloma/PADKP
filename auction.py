@@ -45,24 +45,34 @@ class AuctionState:
 
             # if we've pre-registered a bid for this item, add it to the auction now
             if item in self.preregistered_bids:
-                pre_bid = self.preregistered_bids[item]
-                tier = _calculate_bid_tier(
-                    pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
-                name = self.alt_name if pre_bid['is_alt'] else self.my_name
-                bid = {'value': pre_bid['value'],
-                       'comment': pre_bid['comment'],
-                       'is_alt': pre_bid['is_alt'],
-                       'status_flag': pre_bid['status_flag'],
-                       'is_second_class_citizen': pre_bid['status_flag'] is not None,
-                       'player': name,
-                       'tier': tier,
-                       'cmp': (tier, pre_bid['value'])
-                       }
-                self.active_auctions[item]['bids'][self.my_name] = bid
+                self.active_auctions[item]['bids'][self.my_name] = []
+                self.active_auctions[item]['bids'][self.my_name+"'s alt"] = []
+                for pre_bid in self.preregistered_bids[item]:
+                    tier = _calculate_bid_tier(
+                        pre_bid['value'], pre_bid['status_flag'], pre_bid['is_alt'])
+                    name = self.alt_name if pre_bid['is_alt'] else self.my_name
+                    bid = {'value': pre_bid['value'],
+                           'comment': pre_bid['comment'],
+                           'is_alt': pre_bid['is_alt'],
+                           'status_flag': pre_bid['status_flag'],
+                           'is_second_class_citizen': pre_bid['status_flag'] is not None,
+                           'player': name,
+                           'tier': tier,
+                           'cmp': (tier, pre_bid['value'])
+                           }
+                    self.active_auctions[item]['bids'][name].append(bid)
                 del self.preregistered_bids[item]
 
             result.add_rows.append(Row(
                 iid=iid, timestamp=timestamp, item=item, item_count=item_count, status='Open'))
+
+        elif action['action'] == 'RESET':
+            item = action['item_name']
+            if item not in self.active_auctions:
+                return result
+            player = action['player_name']
+            self.active_auctions[item]['bids'][player] = []
+            self.active_auctions[item]['bids'][player+"'s alt"] = []
 
         elif action['action'] == 'BID':
             item = action['item_name']
@@ -83,7 +93,7 @@ class AuctionState:
             if item not in self.active_auctions:
                 return result
             print('NEW BID', bid)
-            self.active_auctions[item]['bids'][player] = bid
+            self.active_auctions[item]['bids'][player].append(bid)
 
         elif action['action'] == 'SUICIDE_BID':
             item = action['item_name']
@@ -135,9 +145,13 @@ class AuctionState:
                 line = action['data']
                 result.status_messages.append(f'Failed to parse bid: {line}')
 
+        elif action['action'] == 'PREREGISTER-RESET':
+            print('got a prereg reset', action)
+            self.preregistered_bids[action['item_name']] = []
+
         elif action['action'] == 'PREREGISTER':
             print('got a prereg', action)
-            self.preregistered_bids[action['item_name']] = action
+            self.preregistered_bids[action['item_name']].append(action)
 
         elif action['action'] == 'WAITLIST_ADD':
             print('got a waitlist entry', action)
@@ -170,12 +184,13 @@ class AuctionState:
             return None
 
         bids = self.active_auctions[item]['bids']
+        bids = [item for sublist in bids.values() for item in sublist]
         iid = self.active_auctions[item]['iid']
         n_items = self.active_auctions[item]['item_count']
         n_bids = len(bids)
 
         # check if a main bid 5 or more. if so, alts can't beat mains
-        sorted_bids = sort_bids(bids.values())
+        sorted_bids = sort_bids(bids)
 
         tie = False
         # there are no bids. Item rots.
