@@ -160,14 +160,16 @@ def auction_cancel(line):
     return None
 
 
-AUCTION_AWARD_RE = ("You tell your raid, "
-                    r"'\s*!(correction|tiebreak)\s*!award\s*"
-                    r"(?P<item>.*?)\s+"
-                    r"(?P<name>[A-Z][a-z]+)\s+"
-                    r"(?P<value>[0-9]+)\s+"
-                    r"(?P<comment>\|\|.*)?'$")
+# AUCTION_AWARD_RE = ("You tell your raid, "
+#                     r"'\s*!(correction|tiebreak)\s*!award\s*"
+#                     r"(?P<item>.*?)\s+"
+#                     r"(?P<name>[A-Z][a-z]+)\s+"
+#                     r"(?P<value>[0-9]+)\s+"
+#                     r"(?P<comment>\|\|.*)?'$")
 
-AUCTION_AWARD_RE = r"You tell your raid, '\s*!(correction|tiebreak)\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Z][a-z]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
+AUCTION_AWARD_RE = r"You tell your raid, '\s*!(correction|tiebreak)\s*!award\s*(?P<item>.*)\s*!to\s*(?P<award>(?:[A-Za-z'\s]+\s*[0-9]+\s*,?\s*)+)\s*(?P<comment>\|\|.*)?'$"
+
+NAME_AND_BID_RE = r"(?P<name>[A-Za-z'\s]+)\s*(?P<bid>[0-9]+)"
 
 
 def auction_award_match(line):
@@ -181,8 +183,9 @@ def auction_award(line):
     if search:
         item_name = search.group('item').strip()
         award = search.group('award').replace(',', ' ')
-        winners = award.split()[::2]
-        bids = award.split()[1::2]
+        awards = re.findall(NAME_AND_BID_RE, award, re.IGNORECASE)
+        winners = [x[0].strip() for x in awards]
+        bids = [x[1].strip() for x in awards]
         return {'action': 'AUCTION_AWARD',
                 'item_name': item_name,
                 'winners': winners,

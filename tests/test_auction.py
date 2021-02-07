@@ -95,6 +95,27 @@ def test_whole_auction_case_4():
     assert update.update_rows[0].price == '30'
 
 
+def test_whole_auction_case_4b():
+    auc = auction.AuctionState("Tester")
+    lines = [
+        "[Wed Jun 23 23:24:33 2019] You tell your raid, '!Bids open !2 Cloak of Flames'",
+        "[Wed Jun 23 23:07:49 2019] Foo -> Quaff: Cloak of Flames  35",
+        "[Wed Jun 23 23:07:49 2019] Bar -> Quaff: Cloak of Flames  56",
+        "[Wed Jun 23 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
+        "[Wed Jun 23 23:24:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Baz's alt 30'",
+    ]
+    for line in lines:
+        actions = parse.handle_line(line, set(['Cloak of Flames']))
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        if not isinstance(actions, list):
+            actions = [actions]
+        for action in actions:
+            update = auc.update(action)
+    assert len(auc.concluded_auctions) == 1
+    assert update.update_rows[0].winner == "Baz's alt"
+    assert update.update_rows[0].price == '30'
+
+
 def test_whole_auction_case_5():
     """ test that a tied bid above the alt threshold is correctly awarded to the main"""
     auc = auction.AuctionState("Tester")

@@ -195,9 +195,9 @@ def test_auction_award():
 
 def test_auction_award_2():
     line = parse.LogLine(
-        "[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless 100, Quaff 50'")
+        "[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Lyfeless's alt 100, Quaff 50'")
     result = parse.auction_award(line)
-    assert result['winners'] == ['Lyfeless', 'Quaff']
+    assert result['winners'] == ["Lyfeless's alt", 'Quaff']
     assert result['bids'] == ['100', '50']
 
 

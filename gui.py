@@ -72,6 +72,22 @@ class MainPage:
 
         master.config(menu=menu_bar)
 
+        # Bug in this version of python/tkinkter with background colors in tree views.
+        # https://stackoverflow.com/questions/56331001/python-tkinter-treeview-colors-are-not-updating
+        def fixed_map(option):
+            # Returns the style map for 'option' with any styles starting with
+            # ("!disabled", "!selected", ...) filtered out
+
+            # style.map() returns an empty list for missing options, so this should
+            # be future-safe
+            return [elm for elm in style.map("Treeview", query_opt=option)
+                    if elm[:2] != ("!disabled", "!selected")]
+
+        style = ttk.Style()
+        style.map("Treeview",
+                  foreground=fixed_map("foreground"),
+                  background=fixed_map("background"))
+
         columns = ['item', 'item_count', 'status', 'winner', 'price']
         self.tree = ttk.Treeview(self.master, columns=columns)
         self.tree.heading('#0', text='time')
@@ -87,6 +103,9 @@ class MainPage:
         self.tree.column('#4', stretch=tkinter.YES)
         self.tree.column('#5', stretch=tkinter.YES)
         self.tree.grid(row=1, columnspan=4, sticky='nsw')
+
+        self.tree.tag_configure(
+            "charged", background='green')
 
         self.button = tkinter.Button(
             master, text="Load log file (Ctrl-F)", command=self.open_log_file)
@@ -399,7 +418,6 @@ class MainPage:
             costs = [vals[4]] if type(vals[4]) is int else [
                 int(x) for x in vals[4].split(',')]
             time = timestamps.time_from_gui_display(timestamp)
-
             for winner, cost in zip(winners, costs):
                 if winner != 'ROT':
                     charges.append({'character': winner,
@@ -412,7 +430,17 @@ class MainPage:
                                   for x in charges]
         confirm = messagebox.askyesno('', '\n'.join(
             charges_human_readable) + "\n\nCharge DKP?")
+
         if confirm:
+            for row_id in selected:
+                row = self.tree.item(row_id)
+                vals = row['values']
+                if vals[2] != 'Concluded':
+                    continue
+                if vals[4] == '':
+                    continue
+                self.tree.item(row_id, tags="charged")
+
             for charge, msg in zip(charges, charges_human_readable):
                 result = api_client.charge_dkp(**charge)
                 if result.status_code == 201:

@@ -103,7 +103,8 @@ Run Tests
 `python -m pytest`
 
 Build Release
-`build.bat <version-tag>`
+* Change version in setup.py
+`python setup.py py2exe`
 
 Code formatted with autopep8
 
