@@ -558,11 +558,13 @@ class DetailsWindow:
 
     def redraw(self):
         self.tree.delete(*self.tree.get_children())
-        for name, bid in sorted(self.auction['bids'].items(), key=lambda x: x[1]['value']):
+        bids = [item for sublist in self.auction['bids'].values()
+                for item in sublist]
+        for bid in sorted(bids, key=lambda x: x['value']):
             status_flag = '' if bid['status_flag'] is None else bid['status_flag']
             is_alt = 'yes' if bid['is_alt'] else 'no'
             values = (bid['value'], status_flag, is_alt, bid['comment'])
-            self.tree.insert('', 0, text=name, values=values)
+            self.tree.insert('', 0, text=bid['player'], values=values)
         self.window.after(1000, self.redraw)
 
 

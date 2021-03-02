@@ -4,6 +4,7 @@ import timestamps
 import os
 
 API_ROOT = 'padkp.net'
+# API_ROOT = 'localhost:8000'
 
 
 def get_headers(token):
