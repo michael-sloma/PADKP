@@ -86,17 +86,11 @@ BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|inactiv
 
 def auction_bid(line, active_items):
     for item in active_items:
-        # DEPRECATED
-        window_bid_format = (r'(?P<bidder>[A-Z][a-z]+) -> [A-Z][a-z]+:\s+'
-                             rf'(?P<item>{item})\s*([0-9]+)\s*'
-                             r'(dkp)?\s*(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?\s*(\|\|.*)?')
-        # THIS IS THE WAY
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
-                              rf"'\s*(?P<item>{item})\s*([0-9]+)\s*(dkp)?\s*"
-                              r"(alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(\|\|.*)?")
+                              rf"'\s*(?P<item>{item})(?:\s*[0-9]+\s*(?:dkp)?\s*"
+                              r"(?:alt|box|inactive|recruit|fnf|ff|f&f|fandf)?,?){1,}(\|\|.*)?\s*'")
 
-        match = re.match(window_bid_format, line.contents, re.IGNORECASE) \
-            or re.match(direct_tell_format, line.contents, re.IGNORECASE)
+        match = re.match(direct_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
             player_name = match.group('bidder')
             item_name = match.group('item')

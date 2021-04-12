@@ -391,7 +391,7 @@ class MainPage:
             new_winner_list = ', '.join(winner + ' ' + str(cost)
                                         for winner, cost in zip(all_winners, all_costs))
 
-            correction_message = '!tiebreak !award {} !to {}'.format(
+            correction_message = '/rs !tiebreak !award {} !to {}'.format(
                 item_name, new_winner_list)
             self.master.clipboard_clear()
             self.master.clipboard_append(correction_message)
