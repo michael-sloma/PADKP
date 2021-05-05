@@ -12,6 +12,19 @@ SUICIDE_START_RE = COMMAND_RE.format(r'suicide\s*open')
 SUICIDE_CLOSE_RE = COMMAND_RE.format(r'suicide\s*closed')
 
 
+def process_status_flag(flag):
+    if flag is None:
+        return ''
+    if flag.lower() in ['alt', 'box']:
+        return 'ALT'
+    if flag.lower() == 'inactive':
+        return 'INA'
+    if flag.lower() == 'recruit':
+        return 'Recruit'
+    if flag.lower() in ['fnf', 'ff', 'f&f', 'fandf']:
+        return 'FNF'
+
+
 def suicide_start(line):
     """
     Start a suicide auction
@@ -103,9 +116,9 @@ def auction_bid(line, active_items):
                 bid_match = re.match(BID_SECTION_RE,
                                      bid_section, re.IGNORECASE)
                 value = bid_match.group('bid')
-                status_flag = bid_match.group('status_flag')
-                is_alt = status_flag is not None and status_flag.lower() in [
-                    'alt', 'box']
+                status_flag = process_status_flag(
+                    bid_match.group('status_flag'))
+                is_alt = status_flag == 'ALT'
                 comment = bid_match.group('comment')
                 actions.append({'action': 'BID',
                                 'item_name': item_name.strip(),
@@ -113,7 +126,6 @@ def auction_bid(line, active_items):
                                 'value': int(value),
                                 'comment': comment[2:] if comment is not None else '',
                                 'status_flag': status_flag,
-                                # 'alt': status_flag is not None,
                                 'is_second_class_citizen': status_flag is not None,
                                 'is_alt': is_alt,
                                 'timestamp': line.timestamp()})
@@ -211,7 +223,7 @@ def preregister(line):
         for bid_section in line.contents.split(item_name)[1].split(","):
             bid_match = re.match(BID_SECTION_RE, bid_section, re.IGNORECASE)
             value = bid_match.group('bid')
-            status_flag = bid_match.group('status_flag')
+            status_flag = process_status_flag(bid_match.group('status_flag'))
             comment = bid_match.group('comment')
             actions.append({'action': 'PREREGISTER',
                             'item_name': item_name.strip(),
@@ -219,7 +231,7 @@ def preregister(line):
                             'value': int(value),
                             'comment': comment[2:] if comment is not None else '',
                             'status_flag': status_flag,
-                            'is_alt': status_flag is not None,
+                            'is_alt': status_flag == 'ALT',
                             'timestamp': line.timestamp()})
         return actions
     return None

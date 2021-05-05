@@ -19,17 +19,39 @@ import timestamps
 import config
 
 
-def prompt_api_token(f):
-    def with_check_api_token(self, *args, **kwargs):
-        if self.api_token is None or not self.api_token_asked:
-            self.ask_api_token()
-            if self.api_token:
-                self.api_token_asked = True
-        return f(self, *args, **kwargs)
-    return with_check_api_token
+# def prompt_api_token(f):
+#     def with_check_api_token(self, *args, **kwargs):
+#         if self.api_token is None or not self.api_token_asked:
+#             self.ask_api_token()
+#             if self.api_token:
+#                 self.api_token_asked = True
+#         return f(self, *args, **kwargs)
+#     return with_check_api_token
 
 
 class MainPage:
+    def ask_api_token(self):
+        initial_value = self.config.get('api_token', '')
+        if initial_value != '' and not self.force_token:
+            self.api_token = initial_value
+            return
+
+        token = simpledialog.askstring('', 'Please provide an API token (get it from an Admin)',
+                                       initialvalue=initial_value)
+        if token == '':
+            if self.thread is not None:
+                self.thread.stop()
+            self.master.destroy()
+            sys.exit()
+
+        self.api_token = token.strip()
+        self.config['api_token'] = self.api_token
+        self.force_token = False
+
+    def reset_api_token(self):
+        self.force_token = True
+        self.ask_api_token()
+
     def __init__(self, master):
         self.master = master
         self.frame = tkinter.Frame(self.master)
@@ -41,7 +63,7 @@ class MainPage:
         file_menu.add_command(
             label="Choose raid dump directory (Ctrl-R)", command=self.choose_raid_dump_dir)
         file_menu.add_command(
-            label="Enter API token (Ctrl-T)", command=self.ask_api_token)
+            label="Enter API token (Ctrl-T)", command=self.reset_api_token)
         file_menu.add_command(label="Close (Ctrl-Q)",
                               command=self.confirm_quit)
         menu_bar.add_cascade(label="File", menu=file_menu)
@@ -55,9 +77,7 @@ class MainPage:
             label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
         auction_menu.add_command(
             label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        auction_menu.add_command(
-            label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
-        auction_menu.add_command(label="Tiebreak", command=self.tiebreak)
+
         menu_bar.add_cascade(label="Auctions", menu=auction_menu)
 
         dkp_menu = tkinter.Menu(menu_bar, tearoff=0)
@@ -88,24 +108,30 @@ class MainPage:
                   foreground=fixed_map("foreground"),
                   background=fixed_map("background"))
 
-        columns = ['item', 'item_count', 'status', 'winner', 'price']
+        columns = ['item', 'item_count', 'status', 'results', 'warnings']
         self.tree = ttk.Treeview(self.master, columns=columns)
         self.tree.heading('#0', text='time')
         self.tree.heading('#1', text='item')
         self.tree.heading('#2', text='count')
         self.tree.heading('#3', text='status')
-        self.tree.heading('#4', text='winner')
-        self.tree.heading('#5', text='price')
-        self.tree.column('#0', stretch=tkinter.YES)
-        self.tree.column('#1', stretch=tkinter.YES)
-        self.tree.column('#2', stretch=tkinter.YES)
-        self.tree.column('#3', stretch=tkinter.YES)
-        self.tree.column('#4', stretch=tkinter.YES)
-        self.tree.column('#5', stretch=tkinter.YES)
+        self.tree.heading('#4', text='results')
+        self.tree.heading('#5', text='warnings')
+        self.tree.column('#0', stretch=tkinter.YES, minwidth=175)
+        self.tree.column('#1', stretch=tkinter.YES, minwidth=200)
+        self.tree.column('#2', stretch=tkinter.YES, minwidth=40)
+        self.tree.column('#3', stretch=tkinter.YES, minwidth=75, width=75)
+        self.tree.column('#4', stretch=tkinter.YES, minwidth=200)
+        self.tree.column('#5', stretch=tkinter.YES, minwidth=300)
         self.tree.grid(row=1, columnspan=4, sticky='nsw')
 
         self.tree.tag_configure(
             "charged", background='green')
+
+        self.tree.tag_configure(
+            "warning", background='orange')
+
+        self.tree.tag_configure(
+            "corrected", background='yellow')
 
         self.button = tkinter.Button(
             master, text="Load log file (Ctrl-F)", command=self.open_log_file)
@@ -160,10 +186,6 @@ class MainPage:
             label="Copy all concluded auctions (Ctrl-Shift-C)", command=self.copy_report)
         auction_context_menu.add_command(
             label="Copy concluded auctions from selection (Ctrl-C)", command=self.copy_report_from_selection)
-        auction_context_menu.add_command(
-            label="Charge DKP (Ctrl-B)", command=self.charge_dkp)
-        auction_context_menu.add_command(
-            label="Tiebreak", command=self.tiebreak)
 
         def raid_dump_context_menu_popup(event):
             self.raid_dump_pane.focus()
@@ -187,28 +209,28 @@ class MainPage:
         self.master.bind("<Control-g>", lambda _: self.copy_grats_message())
         self.master.bind("<Control-q>", lambda _: self.confirm_quit())
         self.master.bind("<Control-d>", lambda _: self.open_details_window())
-        self.master.bind("<Control-b>", lambda _: self.charge_dkp())
         self.master.bind("<Control-w>", lambda _: self.open_award_dkp_window())
         self.master.bind("<Control-Shift-W>", lambda _: self.quick_award_dkp())
         self.master.bind("<Control-Shift-M>",
                          lambda _: self.casual_award_dkp())
-        self.master.bind("<Control-t>", lambda _: self.ask_api_token())
+        self.master.bind("<Control-t>", lambda _: self.reset_api_token())
         self.master.bind("<Control-r>", lambda _: self.choose_raid_dump_dir())
 
         self.master.after(1, self.tree.focus_force)
 
         self.my_name = ''
         self.config = config.load_saved_config()
-        self.api_token_asked = False
-        self.api_token = self.config.get('api_token', None)
+
+        # trigger the various events that happen "on update"
+        self.force_token = False
+        self.ask_api_token()
+
         if 'log_file' in self.config and os.path.exists(self.config['log_file']):
             self.open_log_file(self.config['log_file'])
 
         if 'dump_path' in self.config and os.path.exists(self.config['dump_path']):
             self.show_raid_dumps()
 
-        # trigger the various events that happen "on update"
-        self.state.update({'action': 'initialize'})
         print("LOADED")
 
     def choose_raid_dump_dir(self, path=None):
@@ -244,7 +266,6 @@ class MainPage:
             self.master.destroy()
             sys.exit()
 
-    @prompt_api_token
     def open_award_dkp_window(self):
         filename = self.raid_dump_pane.item(
             self.raid_dump_pane.selection())['text']
@@ -254,7 +275,6 @@ class MainPage:
     def open_waitlist_window(self):
         WaitlistWindow(self.master, self.state)
 
-    @prompt_api_token
     def quick_award_dkp(self):
         dkp_value = 1
         attendance = 1
@@ -284,7 +304,6 @@ class MainPage:
             messagebox.showerror(
                 "", "Server error, no DKP awarded\n\n{}".format(result.text))
 
-    @prompt_api_token
     def casual_award_dkp(self):
         dkp_value = 1
         attendance = 1
@@ -332,8 +351,7 @@ class MainPage:
         iid = self.tree.focus()
         vals = self.tree.item(iid)['values']
         try:
-            message = '/rs Grats {} on {} for {} dkp'.format(
-                vals[3], vals[0], vals[4])
+            message = '/rs Grats {}'.format(vals[3])
             self.master.clipboard_clear()
             self.master.clipboard_append(message)
             print(message)
@@ -351,107 +369,6 @@ class MainPage:
         self.master.clipboard_clear()
         self.master.clipboard_append(report)
 
-    @prompt_api_token
-    def tiebreak(self):
-        selected = self.tree.selection()
-        if len(selected) != 1:
-            messagebox.showerror('select exactly one tied auction!')
-            return
-
-        row_id = selected[0]
-        row = self.tree.item(row_id)
-        vals = row['values']
-        item_name = vals[0]
-        item_count = int(vals[1])
-        if vals[2] != 'Tied':
-            messagebox.showerror('Auction is not tied!')
-            return
-        winners = [x.strip() for x in vals[3].split(',')]
-        costs = [vals[4]] if type(vals[4]) is int else [int(x)
-                                                        for x in vals[4].split(',')]
-        name_cost_map = dict(zip(winners, costs))
-        lowest_winning_bid = min(costs)
-        tied_characters = [winner for winner, cost in zip(
-            winners, costs) if cost == lowest_winning_bid]
-        non_tied_characters = [winner for winner, cost in zip(
-            winners, costs) if cost > lowest_winning_bid]
-        n_way_tie = item_count - len(non_tied_characters)
-        result = api_client.tiebreak(tied_characters, self.api_token)
-        if result.status_code == 200:
-            ordering = [name for name, explanation in result.json()]
-            explanations = '\n'.join(
-                [explanation for name, explanation in result.json()])
-            tiebreak_winners = ordering[:n_way_tie]
-            message = 'Tiebreak winner(s): {}'.format(
-                ', '.join(tiebreak_winners)) + '\n\n' + 'Explanation:\n' + explanations
-            messagebox.showinfo('tiebreak', message)
-
-            all_winners = non_tied_characters + tiebreak_winners
-            all_costs = [name_cost_map[name] for name in all_winners]
-            new_winner_list = ', '.join(winner + ' ' + str(cost)
-                                        for winner, cost in zip(all_winners, all_costs))
-
-            correction_message = '/rs !tiebreak !award {} !to {}'.format(
-                item_name, new_winner_list)
-            self.master.clipboard_clear()
-            self.master.clipboard_append(correction_message)
-        else:
-            err_msg = 'Could not break tie.\nSend Quaff a bug report with a screenshot of this error message.\n\n{}' \
-                .format(result.text)
-            messagebox.showerror('Could not break tie', err_msg)
-
-    @prompt_api_token
-    def charge_dkp(self):
-        selected = self.tree.selection()
-
-        charges = []
-        for row_id in selected:
-            row = self.tree.item(row_id)
-            timestamp = row['text']
-            vals = row['values']
-            if vals[2] != 'Concluded':
-                continue
-            if vals[4] == '':
-                continue
-            item = vals[0]
-            winners = [x.strip() for x in vals[3].split(',')]
-            costs = [vals[4]] if type(vals[4]) is int else [
-                int(x) for x in vals[4].split(',')]
-            time = timestamps.time_from_gui_display(timestamp)
-            for winner, cost in zip(winners, costs):
-                if winner != 'ROT':
-                    charges.append({'character': winner,
-                                    'item_name': item,
-                                    'value': cost,
-                                    'time': timestamps.time_to_django_repr(time),
-                                    'notes': '',
-                                    'token': self.api_token})
-        charges_human_readable = ['{} to {} for {}'.format(x['item_name'], x['character'], x['value'])
-                                  for x in charges]
-        confirm = messagebox.askyesno('', '\n'.join(
-            charges_human_readable) + "\n\nCharge DKP?")
-
-        if confirm:
-            for row_id in selected:
-                row = self.tree.item(row_id)
-                vals = row['values']
-                if vals[2] != 'Concluded':
-                    continue
-                if vals[4] == '':
-                    continue
-                self.tree.item(row_id, tags="charged")
-
-            for charge, msg in zip(charges, charges_human_readable):
-                result = api_client.charge_dkp(**charge)
-                if result.status_code == 201:
-                    messagebox.showinfo("", "Charged {}".format(msg))
-                else:
-                    err_msg = '{} could not be charged to {}\nSend Quaff a bug report\n\n{}'\
-                        .format(charge['item_name'], charge['character'], result.text)
-                    messagebox.showerror('Failed to charge', err_msg)
-                print('charge completed with status code {}'.format(
-                    result.status_code))
-
     def write_report(self):
         filename = filedialog.asksaveasfilename()
         f = open(filename, 'w')
@@ -466,11 +383,7 @@ class MainPage:
             vals = row['values']
             print(vals, vals[2])
             if vals[2] == 'Concluded':
-                item = vals[0]
-                winner = vals[3]
-                cost = vals[4]
-                report_line = '{}: {} to {} for {}'.format(timestamp, item, winner, cost) if winner != 'ROT' \
-                              else '{}: {} rotted'.format(timestamp, item)
+                report_line = vals[3] + vals[4]
                 report.append(report_line)
         print("text report: ", report)
         return '\n'.join(report)
@@ -481,6 +394,8 @@ class MainPage:
         self.tree.delete(*self.tree.get_children())
         self.queue = queue.Queue()
         self.state = auction.AuctionState()
+        self.state.update(
+            {'action': 'initialize', 'timestamp': dt.datetime.now(), 'api_token': self.api_token})
 
     def load_data_from_log_file(self, file_obj):
         # create Thread object
@@ -506,30 +421,25 @@ class MainPage:
             return
         for new_row in action_result.add_rows:
             self.tree.insert('', 0, text=timestamps.time_to_gui_display(new_row.timestamp),
-                             values=(new_row.item, new_row.item_count, new_row.status, new_row.winner, new_row.price), iid=new_row.iid)
+                             values=(new_row.item, new_row.item_count, new_row.status, new_row.winner), iid=new_row.iid)
         for update_row in action_result.update_rows:
             self.tree.item(update_row.iid, values=(update_row.item, update_row.item_count, update_row.status, update_row.winner,
-                                                   update_row.price))
+                                                   update_row.warnings))
             vals = self.tree.item(update_row.iid)['values']
             if update_row.status == 'Concluded':
-                message = '/rs Grats {} on {} for {} dkp'.format(
-                    vals[3], vals[0], vals[4])
+                message = '/rs {}'.format(update_row.winner)
+                self.tree.item(update_row.iid, tags="charged")
+                if update_row.warnings:
+                    self.tree.item(update_row.iid, tags="warning")
                 self.master.clipboard_clear()
                 self.master.clipboard_append(message)
-            elif update_row.status == 'Tied':
-                message = '/rs {} tied, hold a moment'.format(vals[3])
-                self.master.clipboard_clear()
-                self.master.clipboard_append(message)
+            if update_row.status == 'Corrected':
+                self.tree.item(update_row.iid, tags="corrected")
+            if update_row.status == 'Cancelled':
+                self.tree.delete(update_row.iid)
 
         for message in action_result.status_messages:
             self.display_status_message(message)
-
-    def ask_api_token(self):
-        initial_value = self.api_token if self.api_token is not None else ''
-        token = simpledialog.askstring('', 'Please provide an API token (get it from Quaff)',
-                                       initialvalue=initial_value)
-        self.api_token = token.strip()
-        self.config['api_token'] = self.api_token
 
     def display_status_message(self, msg):
         self.status_window.configure(state='normal')
@@ -551,6 +461,17 @@ class DetailsWindow:
         self.tree.heading('#3', text='alt?')
         self.tree.heading('#4', text='comment')
         self.tree.grid()
+
+        self.status_window = tkinter.Text(self.window, height=10, wrap="word")
+        self.status_window.grid(row=4, columnspan=4, sticky='nsew')
+        self.scroll = tkinter.Scrollbar(
+            master, orient="vertical", command=self.status_window.yview)
+        self.scroll.grid(row=4, column=4, sticky='nse')
+        self.status_window.configure(state='normal')
+        self.status_window.configure(yscrollcommand=self.scroll.set)
+        self.status_window.see("end")
+        self.status_window.configure(state='disabled')
+
         self.close_button = tkinter.Button(
             self.window, text="Close", command=self.window.destroy)
         self.close_button.grid()
@@ -565,6 +486,13 @@ class DetailsWindow:
             is_alt = 'yes' if bid['is_alt'] else 'no'
             values = (bid['value'], status_flag, is_alt, bid['comment'])
             self.tree.insert('', 0, text=bid['player'], values=values)
+
+        self.status_window.configure(state='normal')
+        self.status_window.delete('1.0', tkinter.END)
+        for warning in self.auction.get('warnings', []):
+            self.status_window.insert('1.0', warning + "\n")
+
+        self.status_window.configure(state='disabled')
         self.window.after(1000, self.redraw)
 
 
@@ -727,7 +655,7 @@ class AsyncioThread(threading.Thread):
                 line = self.file_obj.readline()
             except ValueError:
                 break
-            if line is None:
+            if line is None or len(line) == 0 or line[0] == '#':
                 await asyncio.sleep(1)
             else:
                 try:

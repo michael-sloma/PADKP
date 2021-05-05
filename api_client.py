@@ -2,6 +2,8 @@ import datetime as dt
 import requests
 import timestamps
 import os
+import hashlib
+import json
 
 API_ROOT = 'padkp.net'
 # API_ROOT = 'localhost:8000'
@@ -80,3 +82,31 @@ def award_dkp(character, value, attendance_value, notes, token):
 def tiebreak(characters, token):
     request = {'characters': characters}
     return requests.post('http://{}/api/tiebreak/'.format(API_ROOT), json=request, headers=get_headers(token))
+
+
+def build_fingerprint(bids, item_name, item_count):
+    return hashlib.sha256(
+        '{}-{}-{}'.format(json.dumps(bids), item_count, item_name).encode('utf-8')).hexdigest()
+
+
+def resolve_auction(bids, item_name, item_count, token):
+    time = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    fingerprint = build_fingerprint(bids, item_name, item_count)
+    data = {'bids': bids, 'item_count': item_count, 'item_name': item_name,
+            'fingerprint': fingerprint, 'time': time}
+
+    return requests.post('http://{}/api/resolve_auction/'.format(API_ROOT), json=data, headers=get_headers(token))
+
+
+def cancel_auction(bids, item_name, item_count, token):
+    fingerprint = build_fingerprint(bids, item_name, item_count)
+    data = {'fingerprint': fingerprint}
+
+    return requests.post('http://{}/api/cancel_auction/'.format(API_ROOT), json=data, headers=get_headers(token))
+
+
+def correct_auction(bids, item_name, item_count, winner_bids, token):
+    fingerprint = build_fingerprint(bids, item_name, item_count)
+    data = {'fingerprint': fingerprint, 'bids': winner_bids}
+
+    return requests.post('http://{}/api/correct_auction/'.format(API_ROOT), json=data, headers=get_headers(token))

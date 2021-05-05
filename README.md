@@ -99,6 +99,8 @@ The user interface displays all of the auctions that it sees in your log, with t
 
 # Dev Notes
 
+`pip install -r requirements.txt`
+
 Run Tests
 `python -m pytest`
 

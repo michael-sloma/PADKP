@@ -212,7 +212,7 @@ def test_preregister_alt():
     assert bid['item_name'] == 'Singing Steel Breastplate'
     assert bid['value'] == 55
     assert bid['is_alt']
-    assert bid['status_flag'] == 'box'
+    assert bid['status_flag'] == 'ALT'
 
 
 WAITLIST_ADD = "[Wed Jun 12 23:07:49 2019] You tell your raid, '!waitlist add Foobar'"
