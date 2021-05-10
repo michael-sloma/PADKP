@@ -475,9 +475,14 @@ class DetailsWindow:
         self.close_button = tkinter.Button(
             self.window, text="Close", command=self.window.destroy)
         self.close_button.grid()
+        self.last_auc_size = 0
         self.redraw()
 
     def redraw(self):
+        if self.last_auc_size == len(str(self.auction)):
+            self.window.after(1000, self.redraw)
+            return
+        self.last_auc_size = len(str(self.auction))
         self.tree.delete(*self.tree.get_children())
         bids = [item for sublist in self.auction['bids'].values()
                 for item in sublist]
@@ -655,7 +660,7 @@ class AsyncioThread(threading.Thread):
                 line = self.file_obj.readline()
             except ValueError:
                 break
-            if line is None or len(line) == 0 or line[0] == '#':
+            if line is None:
                 await asyncio.sleep(1)
             else:
                 try:
