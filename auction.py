@@ -122,22 +122,27 @@ class AuctionState:
 
         elif action['action'] == 'AUCTION_CANCEL':
             item = action['item_name']
-            if item not in self.active_auctions:
+            if item in self.concluded_auctions:
                 auction = self.concluded_auctions[item]
                 iid = auction['iid']
                 item_count = auction['item_count']
                 bids = self.process_bids_for_export(auction['bids'])
-                api_client.cancel_auction(
+                response = api_client.cancel_auction(
                     bids, item, item_count, self.api_token)
-                del self.concluded_auctions[item]
-            else:
+                if response.status_code == 200:
+                    del self.concluded_auctions[item]
+                    result.update_rows.append(
+                        Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
+                else:
+                    result.update_rows.append(
+                        Row(iid=iid, item=item, item_count=item_count, status='Error', warnings=response.text))
+            elif item in self.active_auctions:
                 auction = self.active_auctions[item]
                 iid = auction['iid']
                 item_count = auction['item_count']
                 del self.active_auctions[item]
-
-            result.update_rows.append(
-                Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
+                result.update_rows.append(
+                    Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
 
         elif action['action'] == 'AUCTION_AWARD':
             item = action['item_name']
@@ -158,13 +163,17 @@ class AuctionState:
 
             bids = self.process_bids_for_export(auction['bids'])
 
-            warning = api_client.correct_auction(
+            response = api_client.correct_auction(
                 bids, item, item_count, winner_bids, self.api_token)
 
-            result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Corrected',
-                                          winner=winners))
-            if item in self.active_auctions:
-                self.archive_current_auction(item)
+            if response.status_code != 200:
+                result.update_rows.append(Row(
+                    iid=iid, item=item, item_count=item_count, status='Error', warnings=response.text))
+            else:
+                result.update_rows.append(Row(iid=iid, item=item, item_count=item_count, status='Corrected',
+                                              winner=winners))
+                if item in self.active_auctions:
+                    self.archive_current_auction(item)
 
         elif action['action'] == 'FAILED_BID':
             if self.active_auctions:
@@ -223,7 +232,9 @@ class AuctionState:
         response = api_client.resolve_auction(
             bids, item, n_items, self.api_token)
 
-        # print(response.text)
+        if response.status_code != 200:
+            return Row(iid=iid, item=item, item_count=n_items,
+                       status='Error', warnings=response.text)
 
         warnings = response.json()['warnings']
 

@@ -131,6 +131,9 @@ class MainPage:
             "warning", background='orange')
 
         self.tree.tag_configure(
+            "error", background='red')
+
+        self.tree.tag_configure(
             "corrected", background='yellow')
 
         self.button = tkinter.Button(
@@ -435,6 +438,8 @@ class MainPage:
                 self.master.clipboard_append(message)
             if update_row.status == 'Corrected':
                 self.tree.item(update_row.iid, tags="corrected")
+            if update_row.status == 'Error':
+                self.tree.item(update_row.iid, tags="error")
             if update_row.status == 'Cancelled':
                 self.tree.delete(update_row.iid)
 
