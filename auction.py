@@ -206,7 +206,7 @@ class AuctionState:
 
     def process_bids_for_export(self, bids):
         bids = [item for sublist in bids.values() for item in sublist]
-        bids = [{'name': bid['player'], 'bid': bid['value'], 'tag': bid['status_flag']}
+        bids = [{'name': bid['player'].replace("'s alt", ''), 'bid': bid['value'], 'tag': bid['status_flag']}
                 for bid in bids]
         return bids
 
@@ -222,6 +222,8 @@ class AuctionState:
 
         response = api_client.resolve_auction(
             bids, item, n_items, self.api_token)
+
+        # print(response.text)
 
         warnings = response.json()['warnings']
 
