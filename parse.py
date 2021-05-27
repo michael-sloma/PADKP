@@ -3,10 +3,12 @@ import os
 import datetime as dt
 
 
-COMMAND_RE = r"You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>.*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
+COMMAND_RE = r"You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>[^\\\+\*\?\[\]\(\)]*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
 AUCTION_START_RE = COMMAND_RE.format(r'bids\s*open')
 AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
+
+BAD_CHARACTERS = r"[\\\+\*\?\[\]\(\)\{\}\:\<\>]+"
 
 SUICIDE_START_RE = COMMAND_RE.format(r'suicide\s*open')
 SUICIDE_CLOSE_RE = COMMAND_RE.format(r'suicide\s*closed')
@@ -88,7 +90,7 @@ def auction_start(line):
         item_name = search.group('item')
         item_count = search.group('number1') or search.group('number2') or '!1'
         return {'action': 'AUCTION_START',
-                'item_name': item_name.strip(),
+                'item_name': re.sub(BAD_CHARACTERS, "", item_name.strip()),
                 'item_count': int(item_count.replace('!', '')),
                 'timestamp': line.timestamp()}
     return None

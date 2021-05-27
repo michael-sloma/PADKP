@@ -23,6 +23,7 @@ auction_tell_windows = \
 [Wed Jun 12 22:49:34 2019] Clikclik tells the raid,  'Grats Intermezzo Singing Steel Breastplate 55 DKP!'"""
 
 AUCTION_OPEN = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate'"
+AUCTION_OPEN_BAD_CHARACTERS = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate\\'"
 AUCTION_OPEN_WITH_COMMENT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate|| TELLS TO ME'"
 AUCTION_OPEN_WITH_COMMENT_2 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'"
 AUCTION_OPEN_WITH_WHITESPACE_1 = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Singing Steel Breastplate || TELLS TO ME'"
@@ -93,6 +94,11 @@ def test_auction_bid_tell(comment, bid_message):
     assert result['player_name'] == 'Playertwo'
     assert result['value'] == 55
     assert result['action'] == 'BID'
+
+
+def test_bad_open_bid():
+    result = parse.handle_line(AUCTION_OPEN_BAD_CHARACTERS, DEFAULT_ITEMS)
+    assert result is None
 
 
 def test_failed_bid():
