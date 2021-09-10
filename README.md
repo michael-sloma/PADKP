@@ -64,11 +64,15 @@ If the bid is for an alt or box, you need to say so, like this
 
 If you are an recruit, inactive, or FNF please label your bid as such
 
-* `You tell soandso, 'Cloack of Flames 50 recruit'
-* `You tell soandso, 'Cloack of Flames 50 inactive'
-* `You tell soandso, 'Cloack of Flames 50 fnf'
+* `You tell soandso, 'Cloak of Flames 50 recruit'
+* `You tell soandso, 'Cloak of Flames 50 inactive'
+* `You tell soandso, 'Cloak of Flames 50 fnf'
 
 The bid will NOT register if you send it before the auction opens, so wait until you see a !BIDS OPEN message before you send a tell. The bid will NOT register if you don't follow the format: the item link, then the bid. Only whole number bids are accepted, no fractions.
+
+If you are on a registered alt, bids will automatically be considered as alt bids, tag your bid as main to specify a bid as coming from your main.
+
+* `You tell soandso, 'Cloak of Flames 50 main'
 
 #### Close an auction
 `/rs !BIDS CLOSED itemlink`
