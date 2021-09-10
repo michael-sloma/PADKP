@@ -37,6 +37,38 @@ def test_whole_auction_case_1():
 
 
 @responses.activate
+def test_whole_auction_case_2():
+    auc = auction.AuctionState("Tester")
+    lines = [
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
+        "[Wed Jun 12 23:07:49 2019] Foobar tells you, 'Cloak of Flames  10 main'",
+        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  10'",
+        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  11'",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
+    ]
+
+    body = {'message': 'Cloak of Flames awarded to - Playerone for 11', 'warnings': []}
+
+    responses.add(responses.POST,
+                  'http://padkp.net/api/resolve_auction/', json=body)
+    for line in lines:
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        actions = parse.handle_line(line, set(['Cloak of Flames']))
+        if not isinstance(actions, list):
+            actions = [actions]
+        for action in actions:
+            auc.update(action)
+    data = json.loads(responses.calls[0].request.body)
+    finished_auction = auc.concluded_auctions['Cloak of Flames']
+    assert finished_auction['item'] == 'Cloak of Flames'
+    assert len(finished_auction['bids']) == 4
+    assert data['bids'] == [{'name': 'Foobar', 'bid': 10, 'tag': 'Main'}, {
+        'name': 'Playerone', 'bid': 11, 'tag': ''}]
+    assert data['item_name'] == 'Cloak of Flames'
+    assert data['item_count'] == 1
+
+
+@responses.activate
 def test_whole_auction_case_3():
     auc = auction.AuctionState("Tester")
     lines = [
@@ -174,7 +206,7 @@ def test_whole_auction_multibid_case_1():
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
         "[Wed Jun 12 23:07:49 2019] Foobar tells you, 'Cloak of Flames  10'",
         "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  10'",
-        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  11, 15 alt'",
+        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  11, 15 alt, 20 main'",
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
     ]
 
@@ -196,6 +228,7 @@ def test_whole_auction_multibid_case_1():
     assert update.update_rows[0].winner == 'Cloak of Flames awarded to - Tester for 1'
     assert data['bids'] == [{'name': 'Foobar', 'bid': 10, 'tag': ''},
                             {'name': "Playerone", 'bid': 11, 'tag': ''},
+                            {'name': 'Playerone', 'bid': 20, 'tag': 'Main'},
                             {'name': 'Playerone', 'bid': 15, 'tag': 'ALT'}]
 
 
@@ -229,7 +262,7 @@ def test_whole_auction_cancel_after_close_case():
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids open Cloak of Flames'",
         "[Wed Jun 12 23:07:49 2019] Foobar tells you, 'Cloak of Flames  10'",
         "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  10'",
-        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  11, 15 alt'",
+        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cloak of Flames  11,15 alt'",
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Cloak of Flames '",
         "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Cancel Cloak of Flames '",
     ]

@@ -21,6 +21,8 @@ def process_status_flag(flag):
         return 'ALT'
     if flag.lower() == 'inactive':
         return 'INA'
+    if flag.lower() == 'main':
+        return 'Main'
     if flag.lower() == 'recruit':
         return 'Recruit'
     if flag.lower() in ['fnf', 'ff', 'f&f', 'fandf']:
@@ -96,14 +98,14 @@ def auction_start(line):
     return None
 
 
-BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
+BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|main|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
 
 
 def auction_bid(line, active_items):
     for item in active_items:
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
                               rf"'\s*(?P<item>{item})(?:\s*[0-9]+\s*(?:dkp)?\s*"
-                              r"(?:alt|box|inactive|recruit|fnf|ff|f&f|fandf)?,?){1,}(\|\|.*)?\s*'")
+                              r"(?:alt|box|main|inactive|recruit|fnf|ff|f&f|fandf)?,?){1,}(\|\|.*)?\s*'")
 
         match = re.match(direct_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
@@ -205,7 +207,7 @@ def auction_award(line):
 
 PREREGISTER_RE = (r"You told (?P<recipient>[a-z]+), "
                   r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
-                  r"(?P<status_flag>alt|box)?(?P<comment>\|\|.*)?")
+                  r"(?P<status_flag>alt|box|main)?(?P<comment>\|\|.*)?")
 
 
 def preregister_match(line):

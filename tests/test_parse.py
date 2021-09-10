@@ -43,6 +43,7 @@ BID_TELL_DKP = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel B
 BID_TELL_ALT_1 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55  alt'"
 BID_TELL_ALT_2 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 ALT'"
 BID_TELL_ALT_3 = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 box'"
+BID_TELL_MAIN = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Steel Breastplate 55 main'"
 
 BIDS_CLOSED = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate'"
 BIDS_CLOSED_WITH_ONE_WHITESPACE_AFTER = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Bids closed Singing Steel Breastplate '"
@@ -83,6 +84,7 @@ def test_auction_open(comment, bids_open_message):
                              ('alt', BID_TELL_ALT_1),
                              ('alt', BID_TELL_ALT_2),
                              ('box', BID_TELL_ALT_3),
+                             ('main', BID_TELL_MAIN),
                              ('no space before bid', BID_TELL_NO_SPACE),
                           ]
                          )
@@ -132,6 +134,13 @@ def test_auction_bid_alt(comment, bid_message, expect_alt):
     assert result is not None
     assert result['is_alt'] == expect_alt
 
+def test_auction_bid_main():
+    input_line = parse.LogLine(BID_TELL_MAIN)
+    result = parse.auction_bid(input_line, DEFAULT_ITEMS)[1]
+    assert result is not None
+    assert result['is_alt'] == False
+    assert result['status_flag'] == 'Main'
+
 
 @ pytest.mark.parametrize('comment, bids_closed_message',
                           [('regular message', BIDS_CLOSED),
@@ -179,6 +188,13 @@ def test_auction_award_2():
     assert result['winners'] == ["Lyfeless's alt", 'Quaff']
     assert result['bids'] == ['100', '50']
 
+def test_auction_award_2B():
+    line = parse.LogLine(
+        "[Wed Jun 12 22:49:34 2019] You tell your raid, '!correction !award Cloak of Flames !to Sneakysk 50,Sneakysk 50'")
+    result = parse.auction_award(line)
+    assert result['winners'] == ["Sneakysk", 'Sneakysk']
+    assert result['bids'] == ['50', '50']
+
 
 def test_auction_award_3():
     line = parse.LogLine(
@@ -190,6 +206,7 @@ def test_auction_award_3():
 
 PREGISTER = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 '"
 PREREGISTER_ALT = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 box'"
+PREREGISTER_MAIN = "[Wed Jun 12 23:07:49 2019] You told Lyfeless, '!preregister Singing Steel Breastplate 55 main'"
 
 
 def test_preregister():
@@ -219,6 +236,20 @@ def test_preregister_alt():
     assert bid['value'] == 55
     assert bid['is_alt']
     assert bid['status_flag'] == 'ALT'
+
+def test_preregister_main():
+    line = parse.LogLine(PREREGISTER_MAIN)
+    assert parse.preregister_match(line)
+    result = parse.preregister(line)
+    reset = result[0]
+    bid = result[1]
+
+    assert reset['action'] == 'PREREGISTER-RESET'
+    assert bid['action'] == 'PREREGISTER'
+    assert bid['item_name'] == 'Singing Steel Breastplate'
+    assert bid['value'] == 55
+    assert bid['is_alt'] == False
+    assert bid['status_flag'] == 'Main'
 
 
 WAITLIST_ADD = "[Wed Jun 12 23:07:49 2019] You tell your raid, '!waitlist add Foobar'"
