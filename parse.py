@@ -8,7 +8,7 @@ AUCTION_START_RE = COMMAND_RE.format(r'bids\s*open')
 AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
 
-BAD_CHARACTERS = r"[\\\+\*\?\[\]\(\)\{\}\:\<\>]+"
+BAD_CHARACTERS = r"[\\\+\*\?\[\]\(\)\{\}\<\>]+"
 
 SUICIDE_START_RE = COMMAND_RE.format(r'suicide\s*open')
 SUICIDE_CLOSE_RE = COMMAND_RE.format(r'suicide\s*closed')
