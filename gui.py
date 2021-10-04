@@ -342,7 +342,7 @@ class MainPage:
     def open_log_file(self, filename=None):
         self.clear_data()
         if filename is None:
-            filename = filedialog.askopenfilename()
+            filename = filedialog.askopenfilename(filetypes=[('EQ Log','eqlog_*'),('All', '*')])
         if filename:
             f = open(filename)
             self.load_data_from_log_file(f)
@@ -534,7 +534,9 @@ class AwardDkpWindow:
         if filename:
             self.filename = os.path.join(path, filename)
         else:
-            self.filename = filedialog.askopenfilename()
+            self.filename = filedialog.askopenfilename(filetypes=[('Raid Dumps','RaidRoster_*'),('All', '*')])
+        if not self.filename:
+            return
         short_filename = os.path.split(self.filename)[-1]
 
         self.window = tkinter.Toplevel(master)
