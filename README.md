@@ -101,6 +101,20 @@ Override the result of an auction to show it as concluded in favor of the specif
 
 The corrected auction will be colored yellow in the application once the correction is resolved with the server.
 
+
+#### Running an attendance based Flag request
+Open up requests for a flag drop based on attendance. N should be slightly above the number of flag pieces in case someone ends up not needing it.
+
+`/rsay !Flag open itemlink !N`
+
+Bidders simply send the itemlink to the auctioneer
+
+`/t Soandso itemlink`
+
+Then close the flag to recieve a sorted list of people by attendance
+
+`/rsay !Flag closed itemlink`
+
 ## The user interface
 The user interface displays all of the auctions that it sees in your log, with the most recent auctions at the top of the window.
 

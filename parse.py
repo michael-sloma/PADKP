@@ -3,9 +3,11 @@ import os
 import datetime as dt
 
 
-COMMAND_RE = r"You tell your raid, '\s*!{}\s*(?P<number1>![0-9])?\s*(?P<item>[^\\\+\*\?\[\]\(\)]*?)\s*(?P<number2>![0-9])?\s*(?P<comment>\|\|.*)?'$"
+COMMAND_RE = r"You tell your raid, '\s*!{}\s*(?P<number1>![0-9]+)?\s*(?P<item>[^\\\+\*\?\[\]\(\)]*?)\s*(?P<number2>![0-9]+)?\s*(?P<comment>\|\|.*)?'$"
 AUCTION_START_RE = COMMAND_RE.format(r'bids\s*open')
 AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
+FLAG_START_RE = COMMAND_RE.format(r'flag\s*open')
+FLAG_CLOSE_RE = COMMAND_RE.format(r'flag\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
 
 BAD_CHARACTERS = r"[\\\+\*\?\[\]\(\)\{\}\<\>]+"
@@ -78,6 +80,9 @@ def suicide_bid(line, active_items):
 def auction_start_match(line):
     return re.match(AUCTION_START_RE, line.contents, re.IGNORECASE)
 
+def flag_start_match(line):
+    return re.match(FLAG_START_RE, line.contents, re.IGNORECASE)
+
 
 def auction_start(line):
     """
@@ -97,9 +102,22 @@ def auction_start(line):
                 'timestamp': line.timestamp()}
     return None
 
+def flag_start(line):
+
+    search = re.search(FLAG_START_RE,
+                       line.contents,
+                       re.IGNORECASE)
+    if search:
+        item_name = search.group('item')
+        item_count = search.group('number1') or search.group('number2') or '!1'
+        return {'action': 'FLAG_START',
+                'item_name': re.sub(BAD_CHARACTERS, "", item_name.strip()),
+                'item_count': int(item_count.replace('!', '')),
+                'timestamp': line.timestamp()}
+    return None
+
 
 BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|main|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
-
 
 def auction_bid(line, active_items):
     for item in active_items:
@@ -137,6 +155,30 @@ def auction_bid(line, active_items):
     return None
 
 
+def flag_bid(line, active_items):
+    for item in active_items:
+        direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
+                                rf"'\s*(?P<item>{item})\s*'")
+        outgoing_tell_format = (r"You told (?P<recipient>[a-z]+), "
+                                rf"'\s*(?P<item>{item})\s*'")
+
+        match = re.match(direct_tell_format, line.contents, re.IGNORECASE)
+        if match is not None:
+            player_name = match.group('bidder')
+            item_name = match.group('item')
+            return {'action': 'FLAG_BID',
+                    'item_name': item_name.strip(),
+                    'player_name': player_name,
+                    'timestamp': line.timestamp()}
+    
+        match = re.match(outgoing_tell_format, line.contents, re.IGNORECASE)
+        if match is not None:
+            item_name = match.group('item')
+            return {'action': 'FLAG_SELF_BID',
+                    'item_name': item_name.strip(),                    
+                    'timestamp': line.timestamp()}
+    return None
+
 def auction_close_match(line):
     return re.match(AUCTION_CLOSE_RE, line.contents, re.IGNORECASE)
 
@@ -147,6 +189,20 @@ def auction_close(line):
         # TODO error handling if there is no such active auction
         item_name = search.group('item')
         return {'action': 'AUCTION_CLOSE',
+                'item_name': item_name.strip(),
+                'timestamp': line.timestamp()}
+    return None
+
+def flag_close_match(line):
+    return re.match(FLAG_CLOSE_RE, line.contents, re.IGNORECASE)
+
+
+def flag_close(line):
+    search = re.search(FLAG_CLOSE_RE, line.contents, re.IGNORECASE)
+    if search:
+        # TODO error handling if there is no such active auction
+        item_name = search.group('item')
+        return {'action': 'FLAG_CLOSE',
                 'item_name': item_name.strip(),
                 'timestamp': line.timestamp()}
     return None
@@ -203,7 +259,6 @@ def auction_award(line):
                 'data': line.contents,
                 'timestamp': line.timestamp()}
     return None
-
 
 PREREGISTER_RE = (r"You told (?P<recipient>[a-z]+), "
                   r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
@@ -308,11 +363,15 @@ def handle_line(raw_line, active_items):
     line = LogLine(raw_line)
     if auction_start_match(line):
         return auction_start(line)
-    match = auction_bid(line, active_items)
+    if flag_start_match(line):
+        return flag_start(line)
+    match = auction_bid(line, active_items) or flag_bid(line, active_items)
     if match:
         return match
     if auction_close_match(line):
         return auction_close(line)
+    if flag_close_match(line):
+        return flag_close(line)
     if auction_cancel_match(line):
         return auction_cancel(line)
     if auction_award_match(line):

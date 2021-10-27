@@ -88,6 +88,11 @@ def build_fingerprint(bids, item_name, item_count):
     return hashlib.sha256(
         '{}-{}-{}'.format(json.dumps(bids), item_count, item_name).encode('utf-8')).hexdigest()
 
+def resolve_flags(players, item_name, item_count, token):
+    data = {'players': players, 'item_count': item_count, 'item_name': item_name}
+
+    return requests.post('http://{}/api/resolve_flags/'.format(API_ROOT), json=data, headers=get_headers(token))
+
 
 def resolve_auction(bids, item_name, item_count, token):
     time = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')

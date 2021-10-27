@@ -42,7 +42,7 @@ class AuctionState:
         if action['action'] == 'initialize':
             self.startup_time = dt.datetime.now()
             self.api_token = action['api_token']
-        elif action['action'] in ('AUCTION_START', 'SUICIDE_START'):
+        elif action['action'] in ('AUCTION_START', 'SUICIDE_START', 'FLAG_START'):
             # create a new auction
             item = action['item_name']
             timestamp = action['timestamp']
@@ -104,6 +104,22 @@ class AuctionState:
                 return result
             print('NEW BID', bid)
             self.active_auctions[item]['bids'][player].append(bid)
+        
+        elif action['action'] == 'FLAG_BID':
+            item = action['item_name']
+            player = action['player_name']            
+            if item not in self.active_auctions:
+                return result
+            print('NEW FLAG BID', {'item': item, 'player': player})
+            self.active_auctions[item]['bids'][player] = True
+
+        elif action['action'] == 'FLAG_SELF_BID':
+            item = action['item_name']
+            player = self.my_name
+            if item not in self.active_auctions:
+                return result
+            print('NEW FLAG BID', {'item': item, 'player': player})
+            self.active_auctions[item]['bids'][player] = True            
 
         elif action['action'] == 'SUICIDE_BID':
             item = action['item_name']
@@ -114,6 +130,11 @@ class AuctionState:
             if item not in self.active_auctions:
                 return result
             self.active_auctions[item]['bids'][player] = bid
+
+        elif action['action'] == 'FLAG_CLOSE':
+            update = self.handle_flag_close(action)
+            if update:
+                result.update_rows.append(update)
 
         elif action['action'] == 'AUCTION_CLOSE':
             update = self.handle_auction_close(action)
@@ -231,6 +252,34 @@ class AuctionState:
 
         response = api_client.resolve_auction(
             bids, item, n_items, self.api_token)
+
+        if response.status_code != 200:
+            return Row(iid=iid, item=item, item_count=n_items,
+                       status='Error', warnings=response.text)
+
+        warnings = response.json()['warnings']
+
+        self.active_auctions[item]['warnings'] = warnings
+
+        result = Row(iid=iid, item=item, item_count=n_items,
+                     status='Concluded', winner=response.json()['message'], warnings=', '.join(warnings))
+
+        self.archive_current_auction(item)
+        return result
+
+    def handle_flag_close(self, action):
+        item = action['item_name']
+        if item not in self.active_auctions:
+            return None
+
+        players = [c for c in self.active_auctions[item]['bids'].keys()]
+
+        iid = self.active_auctions[item]['iid']
+        n_items = self.active_auctions[item]['item_count']
+
+        response = api_client.resolve_flags(
+            players, item, n_items, self.api_token)
+
 
         if response.status_code != 200:
             return Row(iid=iid, item=item, item_count=n_items,

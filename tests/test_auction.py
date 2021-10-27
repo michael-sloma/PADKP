@@ -233,6 +233,39 @@ def test_whole_auction_multibid_case_1():
 
 
 @responses.activate
+def test_flag_auction_case_1():
+    auc = auction.AuctionState("Tester")
+    lines = [
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Flag open !15 Cryptic Logbook'",
+        "[Wed Jun 12 23:24:33 2019] You told Grunt, 'Cryptic Logbook'",
+        "[Wed Jun 12 23:07:49 2019] Foobar tells you, 'Cryptic Logbook'",
+        "[Wed Jun 12 23:07:49 2019] Playerone tells you, 'Cryptic Logbook'",
+        "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Cryptic Logbook'",
+        "[Wed Jun 12 23:24:33 2019] You tell your raid, '!Flag closed Cryptic Logbook '",
+    ]
+
+    body = {'message': 'Cryptic Logbook: Playerone, Playertwo, Foobar, Tester', 'warnings': []}
+    responses.add(responses.POST,
+                  'http://padkp.net/api/resolve_flags/', json=body)
+    for line in lines:
+        # we assume that every action was parsed properly. parse failures will cause a type error here
+        actions = parse.handle_line(line, set(['Cryptic Logbook']))        
+        if not isinstance(actions, list):
+            actions = [actions]
+        for action in actions:
+            update = auc.update(action)    
+    finished_auction = auc.concluded_auctions['Cryptic Logbook']
+    data = json.loads(responses.calls[0].request.body)
+
+    assert finished_auction['item'] == 'Cryptic Logbook'
+    assert len(finished_auction['bids']) == 4
+    assert update.update_rows[0].winner == 'Cryptic Logbook: Playerone, Playertwo, Foobar, Tester'    
+    assert data['players'] == ['Tester', 'Foobar', 'Playerone', 'Playertwo']
+    assert data['item_count'] == 15
+    assert data['item_name'] == 'Cryptic Logbook'
+
+
+@responses.activate
 def test_whole_auction_cancel_pre_close_case():
     auc = auction.AuctionState("Tester")
     lines = [

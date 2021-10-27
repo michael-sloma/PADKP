@@ -455,6 +455,8 @@ class MainPage:
 
 class DetailsWindow:
     def __init__(self, master, auction):
+        if auction is None:
+            return
         self.auction = auction  # save a reference to the auction dict
         self.window = tkinter.Toplevel(master)
         self.window.title('Auction details: {}'.format(auction['item']))
@@ -489,13 +491,19 @@ class DetailsWindow:
             return
         self.last_auc_size = len(str(self.auction))
         self.tree.delete(*self.tree.get_children())
-        bids = [item for sublist in self.auction['bids'].values()
-                for item in sublist]
-        for bid in sorted(bids, key=lambda x: x['value']):
-            status_flag = '' if bid['status_flag'] is None else bid['status_flag']
-            is_alt = 'yes' if bid['is_alt'] else 'no'
-            values = (bid['value'], status_flag, is_alt, bid['comment'])
-            self.tree.insert('', 0, text=bid['player'], values=values)
+        sample  = list(self.auction['bids'].values())[0]
+        if sample is True:
+            #Flag bidding
+            for bidder in self.auction['bids'].keys():
+                self.tree.insert('', 0, text=bidder)
+        else:
+            bids = [item for sublist in self.auction['bids'].values()
+                    for item in sublist]
+            for bid in sorted(bids, key=lambda x: x['value']):
+                status_flag = '' if bid['status_flag'] is None else bid['status_flag']
+                is_alt = 'yes' if bid['is_alt'] else 'no'
+                values = (bid['value'], status_flag, is_alt, bid['comment'])
+                self.tree.insert('', 0, text=bid['player'], values=values)
 
         self.status_window.configure(state='normal')
         self.status_window.delete('1.0', tkinter.END)
@@ -678,9 +686,9 @@ class AsyncioThread(threading.Thread):
                         print('enqueued a line', line)
                         for action in actions:
                             self.queue.put(('', action))
-                            if action['action'] in ('AUCTION_START', 'SUICIDE_START'):
+                            if action['action'] in ('AUCTION_START', 'SUICIDE_START', 'FLAG_START'):
                                 self.active_items.add(action['item_name'])
-                            if action['action'] in ['AUCTION_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
+                            if action['action'] in ['AUCTION_CLOSE', 'FLAG_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
                                 self.active_items.discard(action['item_name'])
                 except Exception:
                     print('PARSE ERROR')
