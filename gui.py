@@ -491,19 +491,20 @@ class DetailsWindow:
             return
         self.last_auc_size = len(str(self.auction))
         self.tree.delete(*self.tree.get_children())
-        sample  = list(self.auction['bids'].values())[0]
-        if sample is True:
-            #Flag bidding
-            for bidder in self.auction['bids'].keys():
-                self.tree.insert('', 0, text=bidder)
-        else:
-            bids = [item for sublist in self.auction['bids'].values()
-                    for item in sublist]
-            for bid in sorted(bids, key=lambda x: x['value']):
-                status_flag = '' if bid['status_flag'] is None else bid['status_flag']
-                is_alt = 'yes' if bid['is_alt'] else 'no'
-                values = (bid['value'], status_flag, is_alt, bid['comment'])
-                self.tree.insert('', 0, text=bid['player'], values=values)
+        if len(self.auction['bids']) > 0:
+            sample  = list(self.auction['bids'].values())[0]
+            if sample is True:
+                #Flag bidding
+                for bidder in self.auction['bids'].keys():
+                    self.tree.insert('', 0, text=bidder)
+            else:
+                bids = [item for sublist in self.auction['bids'].values()
+                        for item in sublist]
+                for bid in sorted(bids, key=lambda x: x['value']):
+                    status_flag = '' if bid['status_flag'] is None else bid['status_flag']
+                    is_alt = 'yes' if bid['is_alt'] else 'no'
+                    values = (bid['value'], status_flag, is_alt, bid['comment'])
+                    self.tree.insert('', 0, text=bid['player'], values=values)
 
         self.status_window.configure(state='normal')
         self.status_window.delete('1.0', tkinter.END)

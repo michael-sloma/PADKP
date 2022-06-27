@@ -51,7 +51,7 @@ class AuctionState:
                 return result
             iid = str(uuid.uuid1())
             self.active_auctions[item] = {'item': item, 'iid': iid, 'bids': {}, 'time': timestamp,
-                                          'item_count': item_count}
+                                          'item_count': item_count, 'flag_auction': action['action'] == 'FLAG_START'}
 
             # if we've pre-registered a bid for this item, add it to the auction now
             if item in self.preregistered_bids:
@@ -81,8 +81,11 @@ class AuctionState:
             if item not in self.active_auctions:
                 return result
             player = action['player_name']
-            self.active_auctions[item]['bids'][player] = []
-            self.active_auctions[item]['bids'][player+"'s alt"] = []
+            if self.active_auctions[item]['flag_auction']:
+                self.active_auctions[item]['bids'].pop(player, None)
+            else:
+                self.active_auctions[item]['bids'][player] = []
+                self.active_auctions[item]['bids'][player+"'s alt"] = []
 
         elif action['action'] == 'BID':
             item = action['item_name']
@@ -102,13 +105,17 @@ class AuctionState:
                    }
             if item not in self.active_auctions:
                 return result
+            if self.active_auctions[item]['flag_auction']:
+                return result
             print('NEW BID', bid)
             self.active_auctions[item]['bids'][player].append(bid)
-        
+
         elif action['action'] == 'FLAG_BID':
             item = action['item_name']
-            player = action['player_name']            
+            player = action['player_name']
             if item not in self.active_auctions:
+                return result
+            if not self.active_auctions[item]['flag_auction']:
                 return result
             print('NEW FLAG BID', {'item': item, 'player': player})
             self.active_auctions[item]['bids'][player] = True
@@ -119,7 +126,7 @@ class AuctionState:
             if item not in self.active_auctions:
                 return result
             print('NEW FLAG BID', {'item': item, 'player': player})
-            self.active_auctions[item]['bids'][player] = True            
+            self.active_auctions[item]['bids'][player] = True
 
         elif action['action'] == 'SUICIDE_BID':
             item = action['item_name']
@@ -149,7 +156,7 @@ class AuctionState:
                 item_count = auction['item_count']
                 bids = self.process_bids_for_export(auction['bids'])
                 response = api_client.cancel_auction(
-                    bids, item, item_count, self.api_token)
+                    bids, item, item_count, iid, self.api_token)
                 if response.status_code == 200:
                     del self.concluded_auctions[item]
                     result.update_rows.append(
@@ -185,7 +192,7 @@ class AuctionState:
             bids = self.process_bids_for_export(auction['bids'])
 
             response = api_client.correct_auction(
-                bids, item, item_count, winner_bids, self.api_token)
+                bids, item, item_count, winner_bids, iid, self.api_token)
 
             if response.status_code != 200:
                 result.update_rows.append(Row(
@@ -251,9 +258,10 @@ class AuctionState:
         n_items = self.active_auctions[item]['item_count']
 
         response = api_client.resolve_auction(
-            bids, item, n_items, self.api_token)
+            bids, item, n_items, iid, self.api_token)
 
         if response.status_code != 200:
+            self.active_auctions[item]['warnings'] = [response.text]
             return Row(iid=iid, item=item, item_count=n_items,
                        status='Error', warnings=response.text)
 
