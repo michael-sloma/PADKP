@@ -2,3 +2,5 @@ pytest
 pyinstaller
 requests
 responses
+chardet
+py2exe
