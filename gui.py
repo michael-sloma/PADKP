@@ -468,7 +468,7 @@ class DetailsWindow:
         self.tree.heading('#2', text='status flag')
         self.tree.heading('#3', text='alt?')
         self.tree.heading('#4', text='comment')
-        self.tree.grid(columnspan=2)
+        self.tree.grid(columnspan=3)
 
         self.status_window = tkinter.Text(self.window, height=10, wrap="word")
         self.status_window.grid(row=4, columnspan=4, sticky='nsew')
@@ -484,10 +484,26 @@ class DetailsWindow:
             self.window, text="Close", command=self.window.destroy)
         self.copy_button = tkinter.Button(
             self.window, text="Copy", command=self.copy)
-        self.close_button.grid(row=5, column=0, sticky='e')
-        self.copy_button.grid(row=5, column=1, sticky='w')
+        self.copy_winner_button = tkinter.Button(
+            self.window, text="Copy Winner", command=self.copy_winner)
+        self.close_button.grid(row=5, column=0)
+        self.copy_button.grid(row=5, column=1)
+        self.copy_winner_button.grid(row=5, column=2)
         self.last_auc_size = 0
         self.redraw()
+
+    def copy_winner(self):
+        bids = [item for sublist in self.auction['bids'].values()
+                for item in sublist]
+        for bid in sorted(bids, key=lambda x: x['value']):
+
+            status_flag = '' if bid['status_flag'] is None else bid['status_flag']
+            is_alt = 'yes' if bid['is_alt'] else 'no'
+            values = (bid['player'], str(bid['value']), status_flag, is_alt, bid['comment'])
+            message = bid['player'] + "\t" + str(bid['value'])
+            self.master.clipboard_clear()
+            self.master.clipboard_append(message)
+            break
 
     def copy(self):
         bids = [item for sublist in self.auction['bids'].values()
