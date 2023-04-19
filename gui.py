@@ -455,6 +455,7 @@ class MainPage:
 
 class DetailsWindow:
     def __init__(self, master, auction):
+        self.master = master
         if auction is None:
             return
         self.auction = auction  # save a reference to the auction dict
@@ -467,7 +468,7 @@ class DetailsWindow:
         self.tree.heading('#2', text='status flag')
         self.tree.heading('#3', text='alt?')
         self.tree.heading('#4', text='comment')
-        self.tree.grid()
+        self.tree.grid(columnspan=2)
 
         self.status_window = tkinter.Text(self.window, height=10, wrap="word")
         self.status_window.grid(row=4, columnspan=4, sticky='nsew')
@@ -481,9 +482,25 @@ class DetailsWindow:
 
         self.close_button = tkinter.Button(
             self.window, text="Close", command=self.window.destroy)
-        self.close_button.grid()
+        self.copy_button = tkinter.Button(
+            self.window, text="Copy", command=self.copy)
+        self.close_button.grid(row=5, column=0, sticky='e')
+        self.copy_button.grid(row=5, column=1, sticky='w')
         self.last_auc_size = 0
         self.redraw()
+
+    def copy(self):
+        bids = [item for sublist in self.auction['bids'].values()
+                for item in sublist]
+        message = "Name\tBid\tStatus\talt?\tcomment\n"
+        for bid in sorted(bids, key=lambda x: x['value']):
+            status_flag = '' if bid['status_flag'] is None else bid['status_flag']
+            is_alt = 'yes' if bid['is_alt'] else 'no'
+            values = (bid['player'], str(bid['value']), status_flag, is_alt, bid['comment'])
+            message += "\t".join(values) + "\n"
+
+        self.master.clipboard_clear()
+        self.master.clipboard_append(message)
 
     def redraw(self):
         if self.last_auc_size == len(str(self.auction)):

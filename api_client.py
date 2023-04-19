@@ -12,6 +12,8 @@ API_ROOT = 'padkp.net'
 def get_headers(token):
     return {'Authorization':  'Token {}'.format(token)}
 
+def check_offline(token):
+    return token == "offline"
 
 def charge_dkp(character, item_name, value, time, notes, token):
     is_alt = "'s alt" in character
@@ -90,6 +92,8 @@ def resolve_flags(players, item_name, item_count, token):
 
 
 def resolve_auction(bids, item_name, item_count, iid, token):
+    if check_offline(token):
+        return None
     time = dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     data = {'bids': bids, 'item_count': item_count, 'item_name': item_name,
             'fingerprint': iid, 'time': time}
@@ -98,6 +102,8 @@ def resolve_auction(bids, item_name, item_count, iid, token):
 
 
 def cancel_auction(bids, item_name, item_count, iid, token):
+    if check_offline(token):
+        return None
     data = {'fingerprint': iid}
 
     return requests.post('http://{}/api/cancel_auction/'.format(API_ROOT), json=data, headers=get_headers(token))

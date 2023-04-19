@@ -157,7 +157,7 @@ class AuctionState:
                 bids = self.process_bids_for_export(auction['bids'])
                 response = api_client.cancel_auction(
                     bids, item, item_count, iid, self.api_token)
-                if response.status_code == 200:
+                if response is None or response.status_code == 200:
                     del self.concluded_auctions[item]
                     result.update_rows.append(
                         Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
@@ -259,6 +259,13 @@ class AuctionState:
 
         response = api_client.resolve_auction(
             bids, item, n_items, iid, self.api_token)
+
+        if response is None:
+            result = Row(iid=iid, item=item, item_count=n_items,
+                        status='Concluded', winner="offline", warnings="offline")
+
+            self.archive_current_auction(item)
+            return result
 
         if response.status_code != 200:
             self.active_auctions[item]['warnings'] = [response.text]
