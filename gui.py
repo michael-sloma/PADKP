@@ -43,10 +43,10 @@ class MainPage:
                 self.thread.stop()
             self.master.destroy()
             sys.exit()
-
-        self.api_token = token.strip()
-        self.config['api_token'] = self.api_token
-        self.force_token = False
+        if token:
+            self.api_token = token.strip()
+            self.config['api_token'] = self.api_token
+            self.force_token = False
 
     def reset_api_token(self):
         self.force_token = True
