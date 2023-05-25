@@ -245,12 +245,12 @@ class MainPage:
             self.config['dump_path'] = path
         self.show_raid_dumps()
 
-    def show_raid_dumps(self):
+    def show_raid_dumps(self, run_once = False):
         path = self.config.get('dump_path')
         if not os.path.exists(path):
             return
         raid_dump_files = sorted([x for x in os.listdir(
-            path) if re.match(r'^RaidRoster_mangler-\d{8}-\d{6}.txt', x)])
+            path) if re.match(r'^RaidRoster_\w+-\d{8}-\d{6}.txt', x)])
         for rdf in raid_dump_files:
             if rdf not in self.raid_dump_files:
                 display_time = timestamps.time_to_gui_display(
@@ -258,7 +258,8 @@ class MainPage:
                 self.raid_dump_pane.insert(
                     '', 0, text=rdf, values=[display_time])
                 self.raid_dump_files.add(rdf)
-        self.master.after(1000, self.show_raid_dumps)
+        if not run_once:
+            self.master.after(1000, self.show_raid_dumps)
 
     def confirm_quit(self):
         confirm = messagebox.askyesno('', 'Really quit?')
@@ -415,9 +416,39 @@ class MainPage:
         while not self.queue.empty():
             _key, action = self.queue.get()
             print('read a piece of data:', action)
-            action_result = self.state.update(action)
+            if action['action'] == 'RAID_DUMP':
+                print(action)
+                action_result = self.award_dkp_command(action['dkp_value'])
+            else:
+                action_result = self.state.update(action)
+
             self.show_result(action_result)
         self.master.after(1000, self.update_gui)
+
+
+    def award_dkp_command(self, value):
+        dkp_value = value
+        attendance = 1
+        notes = ''
+        award_type = 'Time'
+        waitlist = list(self.state.waitlist)
+
+        self.show_raid_dumps(True)
+        short_filename = self.raid_dump_pane.item(self.raid_dump_pane.get_children()[0])['text']
+        filename = os.path.join(self.config.get('dump_path'), short_filename)
+        action_result = auction.ActionResult()
+        try:
+            result = api_client.award_dkp_from_dump(
+                filename, award_type, dkp_value, attendance, waitlist, notes, timestamps.pick_nearest_time(
+                    timestamps.time_from_raid_dump(short_filename)),
+                self.api_token)
+        except Exception:
+            action_result.status_messages.append("Action Failed, no DKP awarded {}".format(traceback.format_exc()))
+            raise
+        if result.status_code == 201:
+            action_result.status_messages.append("Succesfully awarded {} dkp for {}".format(dkp_value, short_filename))
+        else:
+            action_result.status_messages.append("Server error, no DKP awarded\n\n{}".format(result.text))
 
     def show_result(self, action_result):
         if action_result is None:
@@ -724,6 +755,7 @@ class AsyncioThread(threading.Thread):
                                 self.active_items.add(action['item_name'])
                             if action['action'] in ['AUCTION_CLOSE', 'FLAG_CLOSE', 'AUCTION_CANCEL', 'AUCTION_AWARD', 'SUICIDE_CLOSE']:
                                 self.active_items.discard(action['item_name'])
+
                 except Exception:
                     print('PARSE ERROR')
                     print('LINE', line)

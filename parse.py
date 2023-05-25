@@ -9,6 +9,7 @@ AUCTION_CLOSE_RE = COMMAND_RE.format(r'bids\s*closed')
 FLAG_START_RE = COMMAND_RE.format(r'flag\s*open')
 FLAG_CLOSE_RE = COMMAND_RE.format(r'flag\s*closed')
 AUCTION_CANCEL_RE = COMMAND_RE.format('cancel')
+RAID_DUMP_RE = r"You tell your raid, '\s*!dump\s*(?P<number>[0-9]+)?'"
 
 BAD_CHARACTERS = r"[\\\+\*\?\[\]\(\)\{\}\<\>]+"
 
@@ -95,12 +96,29 @@ def auction_start(line):
                        re.IGNORECASE)
     if search:
         item_name = search.group('item')
-        item_count = search.group('number1') or search.group('number2') or '!1'
+        item_count = search.group('number1') or search.group('number2') or '1'
         return {'action': 'AUCTION_START',
                 'item_name': re.sub(BAD_CHARACTERS, "", item_name.strip()),
                 'item_count': int(item_count.replace('!', '')),
                 'timestamp': line.timestamp()}
     return None
+
+
+def raid_dump_match(line):
+    return re.match(RAID_DUMP_RE, line.contents, re.IGNORECASE)
+
+
+def raid_dump(line):
+
+    search = re.search(RAID_DUMP_RE,
+                       line.contents,
+                       re.IGNORECASE)
+
+    print(search)
+    dkp_value = search.group('number') or '1'
+
+    return {'action': 'RAID_DUMP', 'dkp_value': int(dkp_value), 'timestamp': line.timestamp()}
+
 
 def flag_start(line):
 
@@ -118,6 +136,7 @@ def flag_start(line):
 
 
 BID_SECTION_RE = r"\s*(?P<bid>[0-9]+)\s*(dkp)?\s*(?P<status_flag>alt|box|main|inactive|recruit|fnf|ff|f&f|fandf)?(?P<comment>\|\|.*)?"
+
 
 def auction_bid(line, active_items):
     for item in active_items:
@@ -158,7 +177,7 @@ def auction_bid(line, active_items):
 def flag_bid(line, active_items):
     for item in active_items:
         direct_tell_format = (r"(?P<bidder>[A-Z][a-z]+) tells you, "
-                                rf"'\s*(?P<item>{item})\s*'")
+                              rf"'\s*(?P<item>{item})\s*'")
         outgoing_tell_format = (r"You told (?P<recipient>[a-z]+), "
                                 rf"'\s*(?P<item>{item})\s*'")
 
@@ -170,14 +189,15 @@ def flag_bid(line, active_items):
                     'item_name': item_name.strip(),
                     'player_name': player_name,
                     'timestamp': line.timestamp()}
-    
+
         match = re.match(outgoing_tell_format, line.contents, re.IGNORECASE)
         if match is not None:
             item_name = match.group('item')
             return {'action': 'FLAG_SELF_BID',
-                    'item_name': item_name.strip(),                    
+                    'item_name': item_name.strip(),
                     'timestamp': line.timestamp()}
     return None
+
 
 def auction_close_match(line):
     return re.match(AUCTION_CLOSE_RE, line.contents, re.IGNORECASE)
@@ -192,6 +212,7 @@ def auction_close(line):
                 'item_name': item_name.strip(),
                 'timestamp': line.timestamp()}
     return None
+
 
 def flag_close_match(line):
     return re.match(FLAG_CLOSE_RE, line.contents, re.IGNORECASE)
@@ -259,6 +280,7 @@ def auction_award(line):
                 'data': line.contents,
                 'timestamp': line.timestamp()}
     return None
+
 
 PREREGISTER_RE = (r"You told (?P<recipient>[a-z]+), "
                   r"'\s*!preregister\s*(?P<item>.*?)\s*(?P<bid>[0-9]+)\s*(dkp)?\s*"
@@ -363,6 +385,8 @@ def handle_line(raw_line, active_items):
     line = LogLine(raw_line)
     if auction_start_match(line):
         return auction_start(line)
+    if raid_dump_match(line):
+        return raid_dump(line)
     if flag_start_match(line):
         return flag_start(line)
     match = auction_bid(line, active_items) or flag_bid(line, active_items)

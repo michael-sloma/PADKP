@@ -58,6 +58,9 @@ FAILED_BID_TYPO = "[Wed Jun 12 23:07:49 2019] Playertwo tells you, 'Singing Stee
 
 DEFAULT_ITEMS = set(['Singing Steel Breastplate'])
 
+RAID_DUMP_DEFAULT = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!DUMP'"
+RAID_DUMP_CUSTOM_VALUE = "[Wed Jun 12 23:24:33 2019] You tell your raid, '!DUMP 3'"
+
 
 @pytest.mark.parametrize('comment, bids_open_message',
                          [('regular message', AUCTION_OPEN),
@@ -74,6 +77,17 @@ def test_auction_open(comment, bids_open_message):
     result = parse.auction_start(input_line)
     assert result['item_name'] == 'Singing Steel Breastplate'
 
+
+@pytest.mark.parametrize('comment, dump_message, value',
+                         [('default', RAID_DUMP_DEFAULT, 1),
+                          ('custom', RAID_DUMP_CUSTOM_VALUE, 3),
+                          ]
+                         )
+def test_raid_dump_options(comment, dump_message, value):
+    result = parse.handle_line(dump_message, DEFAULT_ITEMS)
+    assert result is not None
+    assert result['action'] == 'RAID_DUMP'
+    assert result['dkp_value'] == value
 
 @pytest.mark.parametrize('comment, bid_message',
                          [('regular message', BID_TELL),

@@ -45,8 +45,8 @@ The parser can handle variations in spacing and capitalization, so the following
 </pre>
 
 You can also start an auction for multiple identical items, by putting `!N` (where `N` is the number of items), before or after the itemlink, like this:
-* `You tell your raid, 'bids open !2 Cloak of Flames || Top Two Bids Win!'`
-* `You tell your raid, 'bids open Cloak of Flames !4 || HOLY COW THERE ARE FOUR!'`
+* `You tell your raid, '!bids open !2 Cloak of Flames || Top Two Bids Win!'`
+* `You tell your raid, '!bids open Cloak of Flames !4 || HOLY COW THERE ARE FOUR!'`
 
 #### Bid on an auction
 `/t Soandso itemlink #`
@@ -150,4 +150,3 @@ Build Release
 `python setup.py py2exe`
 
 Code formatted with autopep8
-

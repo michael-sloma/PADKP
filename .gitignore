@@ -7,3 +7,5 @@ dist
 *_LOCAL*
 *_REMOTE*
 *eqlog_*
+.vscode*
+*RaidRoster*
