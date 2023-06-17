@@ -56,6 +56,8 @@ class MainPage:
         self.master = master
         self.frame = tkinter.Frame(self.master)
 
+        self.startup_time = dt.datetime.now()
+
         menu_bar = tkinter.Menu(master)
         file_menu = tkinter.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Open log file (Ctrl-F)",
@@ -418,7 +420,10 @@ class MainPage:
             print('read a piece of data:', action)
             if action['action'] == 'RAID_DUMP':
                 print(action)
-                action_result = self.award_dkp_command(action['dkp_value'])
+                if self.startup_time and action['timestamp'] > self.startup_time:
+                    action_result = self.award_dkp_command(action['dkp_value'])
+                else:
+                    print("Skipped due to timestamp")
             else:
                 action_result = self.state.update(action)
 
