@@ -150,7 +150,15 @@ class AuctionState:
 
         elif action['action'] == 'AUCTION_CANCEL':
             item = action['item_name']
-            if item in self.concluded_auctions:
+            if item in self.active_auctions:
+                auction = self.active_auctions[item]
+                iid = auction['iid']
+                item_count = auction['item_count']
+                del self.active_auctions[item]
+                result.update_rows.append(
+                    Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
+
+            elif item in self.concluded_auctions:
                 auction = self.concluded_auctions[item]
                 iid = auction['iid']
                 item_count = auction['item_count']
@@ -164,13 +172,6 @@ class AuctionState:
                 else:
                     result.update_rows.append(
                         Row(iid=iid, item=item, item_count=item_count, status='Error', warnings=response.text))
-            elif item in self.active_auctions:
-                auction = self.active_auctions[item]
-                iid = auction['iid']
-                item_count = auction['item_count']
-                del self.active_auctions[item]
-                result.update_rows.append(
-                    Row(iid=iid, item=item, item_count=item_count, status='Cancelled'))
 
         elif action['action'] == 'AUCTION_AWARD':
             item = action['item_name']
