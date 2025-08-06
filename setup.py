@@ -5,4 +5,4 @@ import py2exe
 setup( packages=find_packages(
         where='',
         include=['gui'],  # alternatively: `exclude=['additional*']`
-    ), windows=[{'script': "gui.py", "dest_base": "PADKP-2.7.2"}])
+    ), windows=[{'script': "gui.py", "dest_base": "PADKP-2.8.0"}])

@@ -12,8 +12,12 @@ GUI_DISPLAY_S = '%b %d %Y, %I:%M %p'
 
 
 def time_from_raid_dump(string):
-    time = dt.datetime.strptime(string, 'RaidRoster_mangler-%Y%m%d-%H%M%S.txt')
-    return time.astimezone()
+    try:
+        timestamp_string = string.split('-', 1)[1]
+        time = dt.datetime.strptime(timestamp_string, '%Y%m%d-%H%M%S.txt')
+        return time.astimezone()
+    except:
+        return dt.datetime.now().astimezone()
 
 
 def time_to_gui_display(time):
